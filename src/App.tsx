@@ -7,9 +7,9 @@ import ToneManager from './ToneManager';
 function App(): JSX.Element {
   const toneManager = useRef<ToneManager | null>(null);
 
-  const [bassVolume, setBassVolume] = useState(0);
-  const [drumVolume, setDrumVolume] = useState(0);
-  const [stringVolume, setStringVolume] = useState(0);
+  const [bassVolume, setBassVolume] = useState(-15);
+  const [drumVolume, setDrumVolume] = useState(-15);
+  const [stringVolume, setStringVolume] = useState(-15);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const handleVolumeChange = (e: React.FormEvent<HTMLInputElement>) => {
@@ -82,7 +82,7 @@ function App(): JSX.Element {
           <input
             name="bassVolume"
             type="range"
-            min="-100"
+            min="-50"
             max="0"
             value={bassVolume}
             onInput={handleVolumeChange}
@@ -95,7 +95,7 @@ function App(): JSX.Element {
           <input
             name="drumVolume"
             type="range"
-            min="-100"
+            min="-50"
             max="0"
             value={drumVolume}
             onInput={handleVolumeChange}
@@ -108,7 +108,7 @@ function App(): JSX.Element {
           <input
             name="stringVolume"
             type="range"
-            min="-100"
+            min="-50"
             max="0"
             value={stringVolume}
             onInput={handleVolumeChange}
