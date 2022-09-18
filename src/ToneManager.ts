@@ -72,8 +72,11 @@ function buildBass(...effectChain: Tone.InputNode[]): [ instrument: Tone.DuoSynt
 }
 
 const drumPatternsArray: (Note | Note[])[][] = [
-  [Bass, Rest, LowTom, Rest, Snare, Rest, LowTom, Rest, Bass, Rest, LowTom, Rest, Snare, Rest, MidTom, HighTom],
-  [Bass, Rest, [ClosedHat, Snare], Rest, Bass, Rest, [ClosedHat, Snare], Rest, Bass, OpenHat, Bass, Rest, Crash, HighTom, MidTom, LowTom]
+  [Bass, Rest, Bass, Rest, Bass, Rest, Bass, Rest],
+  [Bass, Rest, [LowTom, Bass], Rest, [MidTom, Bass], Rest, [HighTom, Bass], Snare],
+  [Bass, Rest, [LowTom, Bass], Snare, [MidTom, Bass], Snare, [LowTom, Bass], Snare]
+  // [Bass, Rest, LowTom, Rest, Snare, Rest, LowTom, Rest, Bass, Rest, LowTom, Rest, Snare, Rest, MidTom, HighTom],
+  // [Bass, Rest, [ClosedHat, Snare], Rest, Bass, Rest, [ClosedHat, Snare], Rest, Bass, OpenHat, Bass, Rest, Crash, HighTom, MidTom, LowTom]
 ];
 
 const fullDrumSequence = drumPatternsArray.flat(1);
@@ -123,7 +126,7 @@ class ToneManager {
   
   public registerPatterns = async (shouldOverwrite: boolean = true): Promise<void> => {
     const stringNotes = ['C3', 'D3', 'C2', 'C4'] as Note[];
-    const bassNotes = ['C2', Rest, 'B2', Rest, 'A2', Rest, 'G1', Rest] as Note[];
+    const bassNotes = ['C2', 'C2', Rest, 'B2', 'B2', Rest, 'A2', 'D2', 'A2', Rest] as Note[];
 
     return Tone.loaded()
       .then(() => {
@@ -170,7 +173,7 @@ class ToneManager {
 
         this.bassPattern = new Tone.Sequence((time, note) => {
           if (note !== Rest) {
-            this.bassInstrument.triggerAttackRelease(note, '2n', time);
+            this.bassInstrument.triggerAttackRelease(note, '4n.', time);
           }
         }, bassNotes);
 
