@@ -32,6 +32,7 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
           bounds={new Vector3(cst.CLOUD_XZ_RANGE, cst.CLOUD_Y_RANGE / 2, cst.CLOUD_XZ_RANGE)}
           periodSeconds={cst.CLOUD_PERIOD_SECONDS[cloudIndex]}
           baseColor={cloudBaseColor}
+          audioChain={props.toneManager.cloudChains[cloudIndex]}
           />
       </group>
     });

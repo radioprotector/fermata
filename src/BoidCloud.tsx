@@ -2,6 +2,7 @@ import { useRef, useMemo, useEffect } from "react";
 import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Object3D, Vector3, Color, AxesHelper, Group } from "three";
 import { useFrame } from "@react-three/fiber";
 
+import { CloudAudioChain } from "./ToneManager";
 import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from "./workerInterface";
 
 export interface BoidCloudProps {
@@ -12,6 +13,8 @@ export interface BoidCloudProps {
   bounds: Vector3;
 
   baseColor: Color;
+
+  audioChain: CloudAudioChain;
 };
 
 function BoidCloud(props: BoidCloudProps): JSX.Element {
@@ -69,8 +72,8 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       bounds: new Float32Array(props.bounds.toArray()),
       initialPositions: initPositions,
       maximumVelocity: 0.05,
-      attractionRepulsionBias: 0.4,
-      attractionRepulsionIntensity: 0.02,
+      attractionRepulsionBias: 0.35,
+      attractionRepulsionIntensity: 0.025,
       revertIntensity: 0.0,
       distancingThreshold: 0.005,
       matchingVelocityIntensity: 0.01,
@@ -109,8 +112,8 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           dummyObject.position.set(boidPosition[0], boidPosition[1], boidPosition[2]);
 
           // Rotate twice as slowly as the period
-          // const boidRad = (state.clock.elapsedTime * Math.PI) / props.periodSeconds;
-          // dummyObject.rotation.set(boidRad, 0, boidRad);
+          const boidRad = (state.clock.elapsedTime * Math.PI) / props.periodSeconds;
+          dummyObject.rotation.set(boidRad, 0, boidRad);
 
           dummyObject.updateMatrix();
           
@@ -136,6 +139,23 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
 
         instMeshRef.current.instanceMatrix.needsUpdate = true;
         instMeshRef.current.instanceColor!.needsUpdate = true;
+
+        // Update the cloud audio chain if we have one
+        if (props.audioChain != null) {
+          // The closer the mean values are to 0, the more "accuracy" we have, which increases the prominence of the chords (the second input in the crossfade)
+          const deviationPercentage = (Math.abs(lastWorkerResult.current.means[0] / props.bounds.x) +
+            Math.abs(lastWorkerResult.current.means[1] / props.bounds.y) +
+            Math.abs(lastWorkerResult.current.means[2] / props.bounds.z)) / 3;
+
+          props.audioChain.crossFade.fade.value = MathUtils.clamp(1 - deviationPercentage, 0, 1);
+
+          // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the reverb.
+          const dispersalPercentage = (Math.abs(lastWorkerResult.current.stdevs[0] / props.bounds.x) +
+            Math.abs(lastWorkerResult.current.stdevs[1] / props.bounds.y) +
+            Math.abs(lastWorkerResult.current.stdevs[2] / props.bounds.z)) / 3;
+
+          props.audioChain.reverb.wet.value = MathUtils.clamp(dispersalPercentage, 0, 1);
+        }
 
         // Update the axes helper if we have one.
         // Orient it on the center of the boids and scale it by the stdev for each of the different axes

@@ -68,7 +68,7 @@ const drumPatternsArray: (Note | Note[])[][] = [
 
 const fullDrumSequence = drumPatternsArray.flat(1);
 
-function buildCloudChain(cloudIdx: number): CloudChain {
+function buildCloudChain(cloudIdx: number): CloudAudioChain {
   // Determine the base note to use
   const baseNote = cst.CLOUD_BASE_NOTES[cloudIdx];
   const noteHarmonies = Tone.Frequency(baseNote).harmonize([0, 4, 7]).map((fc) => fc.toFrequency());
@@ -112,7 +112,7 @@ const blankPattern = new Tone.Pattern({ values: [Rest, Rest] as Note[] });
 /**
  * Describes a tone chain for a particular boid cloud.
  */
-export interface CloudChain {
+export interface CloudAudioChain {
   baseInstrument: Instrument<InstrumentOptions>;
 
   chordInstrument: PolySynth;
@@ -126,7 +126,7 @@ export interface CloudChain {
 
 class ToneManager {
 
-  public readonly cloudChains: CloudChain[];
+  public readonly cloudChains: CloudAudioChain[];
 
   private _isPlaying: boolean = false;
 
