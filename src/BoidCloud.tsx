@@ -174,6 +174,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         &&
         <axesHelper
           ref={axesHelperRef}
+          visible={false}
           />
       }
     </group>

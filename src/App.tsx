@@ -75,7 +75,7 @@ function App(): JSX.Element {
     <div id="canvas-container">
       <Suspense fallback={null}>
         <Canvas
-          camera={{ fov: 75, near: 0.1, far: 1000, position: [0, 100, -100] }}>
+          camera={{ fov: 75, near: 0.1, far: 1000, position: [0, 66, -100] }}>
           <OrbitControls
             enablePan={true}
             enableRotate={true}

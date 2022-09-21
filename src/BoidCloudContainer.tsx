@@ -5,7 +5,7 @@ import { Color, Group, MathUtils, Vector3 } from 'three';
 import BoidCloud from './BoidCloud';
 import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from './workerInterface';
 
-const OVERALL_RADIUS = 60;
+const OVERALL_RADIUS = 70;
 const CLOUD_RADIUS = 25;
 const CLOUD_COUNT = 6;
 const CLOUD_PERIODS: number[] = [8, 13, 21, 34, 55, 89, 144];
