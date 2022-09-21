@@ -15,19 +15,14 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
   const [audioPlaying, setAudioPlaying] = useState(false);
   const toggleAudioClickHandler = async () => {
     if (!audioPlaying) {
+      // Unfortunately, this *has* to be in this event handler to prevent auto-play blocking
       await Tone.start();
 
       setAudioPlaying(true);
-      
-      // FUTURE: See if we can move this code into the tone manager handling, assuming async operations won't interfere with auto-play blocking
-      Tone.Transport.bpm.value = 100;
-      Tone.Transport.start();
       props.toneManager.startPlayback();
     }
     else {
       setAudioPlaying(false);
-
-      Tone.Transport.pause();
       props.toneManager.stopPlayback();
     }
   };
