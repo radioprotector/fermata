@@ -1,14 +1,12 @@
+import { Suspense } from 'react';
 import { OrbitControls, Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { Suspense } from 'react';
-import { Color, Vector3 } from 'three';
 
-// import React, { Suspense, useRef, useState } from 'react';
 // import * as Tone from 'tone';
 // import ToneManager from './ToneManager';
 
 import './App.css';
-import BoidCloud from './BoidCloud';
+import BoidCloudContainer from './BoidCloudContainer';
 
 function App(): JSX.Element {
   // const toneManager = useRef<ToneManager | null>(null);
@@ -82,13 +80,9 @@ function App(): JSX.Element {
             enablePan={true}
             enableRotate={true}
             enableZoom={true}
+            autoRotate={true}
           />
-          <BoidCloud
-            cloudSize={15}
-            bounds={new Vector3(25, 25, 25)}
-            periodSeconds={5}
-            baseColor={new Color(0x333399)}
-            />
+          <BoidCloudContainer />
         </Canvas>
       </Suspense>
       {/* Only include stats in development */}
