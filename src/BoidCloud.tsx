@@ -116,16 +116,18 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           
           instMeshRef.current.setMatrixAt(boidIdx, dummyObject.matrix);
 
-          // Calculate the z-stat of the boid position in each axis, converting to an absolute value and capping "extremes"
+          // Calculate the z-stat of the boid position in each axis, converting to an absolute value and capping "extremes".
+          // Because the y-range is limited compared to the other two axes, we're blending it with the X/Z values
           const Z_MAX = 3.0;
           const zStatX = Math.min(Math.abs((boidPosition[0] - lastWorkerResult.current.means[0]) / lastWorkerResult.current.stdevs[0]), Z_MAX);
-          const zStatY = Math.min(Math.abs((boidPosition[1] - lastWorkerResult.current.means[1]) / lastWorkerResult.current.stdevs[1]), Z_MAX);
           const zStatZ = Math.min(Math.abs((boidPosition[2] - lastWorkerResult.current.means[2]) / lastWorkerResult.current.stdevs[2]), Z_MAX);
+          let zStatY = Math.min(Math.abs((boidPosition[1] - lastWorkerResult.current.means[1]) / lastWorkerResult.current.stdevs[1]), Z_MAX);
+          zStatY = (zStatX + zStatY + zStatZ) / 3.0;
 
           // Further darken the color based on its distance from the center of mass
           dummyColor.setRGB(
-            MathUtils.mapLinear(zStatX, 0.0, Z_MAX, props.baseColor.r, 1.0),   
-            MathUtils.mapLinear(zStatY, 0.0, Z_MAX, props.baseColor.g, 1.0),   
+            MathUtils.mapLinear(zStatX, 0.0, Z_MAX, props.baseColor.r, 1.0),
+            MathUtils.mapLinear(zStatY, 0.0, Z_MAX, props.baseColor.g, 1.0),
             MathUtils.mapLinear(zStatZ, 0.0, Z_MAX, props.baseColor.b, 1.0)
           );
 
