@@ -27,7 +27,7 @@ function BoidCloudContainer(): JSX.Element {
       >
         <BoidCloud
           cloudSize={30}
-          bounds={new Vector3(CLOUD_RADIUS, CLOUD_RADIUS, CLOUD_RADIUS)}
+          bounds={new Vector3(CLOUD_RADIUS, CLOUD_RADIUS / 2, CLOUD_RADIUS)}
           periodSeconds={CLOUD_PERIODS[cloudIndex]}
           baseColor={cloudBaseColor}
           />
@@ -84,6 +84,7 @@ useEffect(() => {
     maximumVelocity: 0.01,
     attractionRepulsionBias: -0.25,
     attractionRepulsionIntensity: 0.001,
+    revertIntensity: 0.001,
     distancingThreshold: 0.2,
     matchingVelocityIntensity: 0.0,
     boundingReturnIntensity: 0.01

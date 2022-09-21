@@ -50,6 +50,11 @@ const state = {
   attractionRepulsionIntensity: 0.0,
 
   /**
+   * The intensity of the "revert to initial state" velocity, as a 0.0-1.0 percentage.
+   */
+  revertIntensity: 0.0,
+
+  /**
    * The threshold for the distancing effect.
    * @type {Number}
    */
@@ -84,6 +89,12 @@ const state = {
    * @type {Number}
    */
   length: 0,
+
+  /**
+   * The initial positions used to start the process.
+   * @type {Array<Vector3>}
+   */
+  initialPositions: [],
 
   /**
    * An array of boid positions.
@@ -131,6 +142,7 @@ fns.handleInit = function(data) {
   for (const positionArray of data.initialPositions) {
     const positionVector = new Vector3(positionArray[0], positionArray[1], positionArray[2]);
 
+    state.initialPositions.push(positionVector.clone());
     state.positions.push(positionVector);
     state.totaledCenter.add(positionVector);
 
@@ -141,6 +153,7 @@ fns.handleInit = function(data) {
   // Copy over new configurations
   state.attractionRepulsionBias = data.attractionRepulsionBias;
   state.attractionRepulsionIntensity = data.attractionRepulsionIntensity;
+  state.revertIntensity = data.revertIntensity;
   state.matchingVelocityIntensity = data.matchingVelocityIntensity;
   state.boundingReturnIntensity = data.boundingReturnIntensity;
 };
@@ -161,6 +174,22 @@ fns.getCenterMassAttractionRepulsionVector = function(boidIdx) {
   // Then multiply that average by a centering factor to determine the intensity of the snapping
   return perceivedCenter.multiplyScalar(state.attractionRepulsionIntensity);
 };
+
+/**
+ * Gets a velocity vector to revert to the initial position.
+ * @param {Number} boidIdx The index of the boid.
+ * @returns {Vector3} The velocity vector to apply for reverting to the initial position.
+ */
+fns.getInitialPositionVector = function(boidIdx) {
+  // Determine what it would take to get from the current position to the initial position
+  const currentPosition = state.positions[boidIdx];
+  const initialPosition = state.initialPositions[boidIdx].clone();
+
+  initialPosition.sub(currentPosition);
+
+  // Then multiply that average by a centering factor to determine the intensity of the snapping
+  return initialPosition.multiplyScalar(state.revertIntensity);
+}
 
 /**
  * Gets a velocity vector to distance the boid from other nearby boids.
@@ -216,29 +245,29 @@ fns.getBoundsVector = function (boidIdx) {
 
   // Snap x-values
   if (currentPosition.x > state.bounds.x) {
-    returnVelocity.setX(state.bounds.x * -state.boundingReturnIntensity);
+    returnVelocity.setX(-state.bounds.x);
   }
   else if (currentPosition.x < -state.bounds.x) {
-    returnVelocity.setX(state.bounds.x * state.boundingReturnIntensity);
+    returnVelocity.setX(state.bounds.x);
   }
   
   // Snap y-values
   if (currentPosition.y > state.bounds.y) {
-    returnVelocity.setY(state.bounds.y * -state.boundingReturnIntensity);
+    returnVelocity.setY(-state.bounds.y);
   }
   else if (currentPosition.y < -state.bounds.y) {
-    returnVelocity.setY(state.bounds.y * state.boundingReturnIntensity);
+    returnVelocity.setY(state.bounds.y);
   }
 
   // Snap z-values
   if (currentPosition.z > state.bounds.z) {
-    returnVelocity.setZ(state.bounds.z * -state.boundingReturnIntensity);
+    returnVelocity.setZ(-state.bounds.z);
   }
   else if (currentPosition.z < -state.bounds.z) {
-    returnVelocity.setZ(state.bounds.z * state.boundingReturnIntensity);
+    returnVelocity.setZ(state.bounds.z);
   }
 
-  return returnVelocity;
+  return returnVelocity.multiplyScalar(state.boundingReturnIntensity);
 };
 
 /**
@@ -247,9 +276,9 @@ fns.getBoundsVector = function (boidIdx) {
  fns.handleReady = function() {
   // Determine the attraction/repulsion factor.
   // Get the elapsed time, add the offset, convert to radians, and divide by the period.
-  // This ensures that over time, we should oscillate between attraction and repulsion
-  const attractionRepulsionFactor = Math.sin(((state.clock.getElapsedTime() + state.periodOffset) * 2 * Math.PI) / state.periodSeconds)
-    + state.attractionRepulsionBias;
+  // This ensures that over time, we should oscillate between attraction and repulsion (assuming no bias)
+  const clockPercentage = (state.clock.getElapsedTime() + state.periodOffset) / state.periodSeconds;
+  const attractionRepulsionFactor = Math.sin(clockPercentage * 2 * Math.PI) + state.attractionRepulsionBias;
 
   // Track the new center and velocity
   const newCenterTotal = new Vector3();
@@ -260,13 +289,27 @@ fns.getBoundsVector = function (boidIdx) {
     const newVelocity = new Vector3();
 
     // Incorporate rule 1 with attraction/repulsion factored in
-    newVelocity.add(this.getCenterMassAttractionRepulsionVector(boidIdx).multiplyScalar(attractionRepulsionFactor));
+    if (state.attractionRepulsionIntensity > 0.0 && state.attractionRepulsionFactor !== 0.0) {
+      newVelocity.add(this.getCenterMassAttractionRepulsionVector(boidIdx).multiplyScalar(attractionRepulsionFactor));
+    }
 
     // Incorporate the other vectors without scaling
-    newVelocity.add(this.getDistancingVector(boidIdx));
-    newVelocity.add(this.getMatchingVector(boidIdx));
-    newVelocity.add(this.getBoundsVector(boidIdx));
+    if (state.revertIntensity > 0.0) {
+      newVelocity.add(this.getInitialPositionVector(boidIdx));
+    }
 
+    if (state.distancingThreshold > 0.0) {
+      newVelocity.add(this.getDistancingVector(boidIdx));
+    }
+
+    if (state.matchingVelocityIntensity > 0.0) {
+      newVelocity.add(this.getMatchingVector(boidIdx));
+    }
+
+    if (state.boundingReturnIntensity > 0.0) {
+      newVelocity.add(this.getBoundsVector(boidIdx));
+    }
+    
     // Now update the state vectors for the boid, ensuring velocity is clamped
     state.velocities[boidIdx].add(newVelocity).clamp(state.velocityLowerClamp, state.velocityUpperClamp);
     state.positions[boidIdx].add(state.velocities[boidIdx]);

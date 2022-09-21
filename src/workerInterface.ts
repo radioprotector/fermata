@@ -32,6 +32,11 @@ export interface initMessageToWorker {
   attractionRepulsionIntensity: number;
 
   /**
+   * The intensity of the "revert to initial state" velocity, as a 0.0-1.0 percentage.
+   */
+  revertIntensity: number,
+
+  /**
    * The threshold for the distancing effect, as a 0.0-1.0 percentage of length.
    */
   distancingThreshold: number;

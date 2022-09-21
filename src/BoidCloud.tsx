@@ -68,12 +68,13 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       periodSeconds: props.periodSeconds,
       bounds: new Float32Array(props.bounds.toArray()),
       initialPositions: initPositions,
-      maximumVelocity: 0.075,
-      attractionRepulsionBias: 0.5,
-      attractionRepulsionIntensity: 0.01,
+      maximumVelocity: 0.05,
+      attractionRepulsionBias: 0.4,
+      attractionRepulsionIntensity: 0.02,
+      revertIntensity: 0.0,
       distancingThreshold: 0.005,
-      matchingVelocityIntensity: 0.005,
-      boundingReturnIntensity: 0.01
+      matchingVelocityIntensity: 0.01,
+      boundingReturnIntensity: 0.02
     };
 
     worker.current.postMessage(initMessage, initTransferObjects);
@@ -104,12 +105,13 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       if (lastWorkerResult.current !== null) {
         // Update positions on all of the boids
         for(let boidIdx = 0; boidIdx < props.cloudSize; boidIdx++) {
-          // Rotate twice as slowly as the period
-          const boidRad = (state.clock.elapsedTime * Math.PI) / props.periodSeconds;
           const boidPosition = lastWorkerResult.current.positions[boidIdx];
-
           dummyObject.position.set(boidPosition[0], boidPosition[1], boidPosition[2]);
-          dummyObject.rotation.set(boidRad, 0, boidRad);
+
+          // Rotate twice as slowly as the period
+          // const boidRad = (state.clock.elapsedTime * Math.PI) / props.periodSeconds;
+          // dummyObject.rotation.set(boidRad, 0, boidRad);
+
           dummyObject.updateMatrix();
           
           instMeshRef.current.setMatrixAt(boidIdx, dummyObject.matrix);
