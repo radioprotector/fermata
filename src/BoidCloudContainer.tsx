@@ -2,14 +2,11 @@ import {  useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Color, Group, MathUtils, Vector3 } from 'three';
 
+import * as cst from './constants';
+
 import ToneManager from './ToneManager';
 import BoidCloud from './BoidCloud';
 import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from './workerInterface';
-
-const OVERALL_RADIUS = 70;
-const CLOUD_RADIUS = 25;
-const CLOUD_COUNT = 6;
-const CLOUD_PERIODS: number[] = [8, 13, 21, 34, 55, 89, 144];
 
 export interface BoidCloudContainerProps {
   toneManager: ToneManager
@@ -21,19 +18,19 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
   const cloudContainerElements =
     [0, 1, 2, 3, 4, 5].map((cloudIndex) => {
       const cloudBaseColor = new Color();
-      cloudBaseColor.setHSL(cloudIndex / CLOUD_COUNT, 0.5, 0.4);
+      cloudBaseColor.setHSL(cloudIndex / cst.CLOUD_COUNT, 0.5, 0.4);
 
-      const cloudRad = MathUtils.degToRad(MathUtils.mapLinear(cloudIndex, 0, CLOUD_COUNT, 0, 360));
+      const cloudRad = MathUtils.degToRad(MathUtils.mapLinear(cloudIndex, 0, cst.CLOUD_COUNT, 0, 360));
 
       return <group
         key={cloudIndex}
         ref={(grp: Group) => cloudGroups.current[cloudIndex] = grp}
-        position={[Math.cos(cloudRad) * OVERALL_RADIUS, 0, Math.sin(cloudRad) * OVERALL_RADIUS]}
+        position={[Math.cos(cloudRad) * cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, Math.sin(cloudRad) * cst.OVERALL_XZ_RANGE]}
       >
         <BoidCloud
           cloudSize={30}
-          bounds={new Vector3(CLOUD_RADIUS, CLOUD_RADIUS / 2, CLOUD_RADIUS)}
-          periodSeconds={CLOUD_PERIODS[cloudIndex]}
+          bounds={new Vector3(cst.CLOUD_XZ_RANGE, cst.CLOUD_Y_RANGE / 2, cst.CLOUD_XZ_RANGE)}
+          periodSeconds={cst.CLOUD_PERIOD_SECONDS[cloudIndex]}
           baseColor={cloudBaseColor}
           />
       </group>
@@ -68,7 +65,7 @@ useEffect(() => {
   const initPositions: Float32Array[] = [];
   const initTransferObjects = [];
 
-  for(let boidGroupIdx = 0; boidGroupIdx < CLOUD_COUNT; boidGroupIdx++) {
+  for(let boidGroupIdx = 0; boidGroupIdx < cst.CLOUD_COUNT; boidGroupIdx++) {
     const groupObject = cloudGroups.current[boidGroupIdx];
 
     const groupPosition = new Float32Array(3);
@@ -80,11 +77,11 @@ useEffect(() => {
     initTransferObjects.push(groupPosition.buffer);
   }
 
-  // Unlike the individual clouds, we want to use a very slow position, don't vary the y-value much, and use the broad radius
+  // Unlike the individual clouds, we want to use a very slow position, don't shift the y-axis, and use more of a reversion factor
   const initMessage: initMessageToWorker = {
     type: 'init',
-    periodSeconds: CLOUD_PERIODS[CLOUD_PERIODS.length - 1],
-    bounds: new Float32Array([OVERALL_RADIUS, 0, OVERALL_RADIUS]),
+    periodSeconds: cst.CLOUD_PERIOD_SECONDS[cst.CLOUD_PERIOD_SECONDS.length - 1],
+    bounds: new Float32Array([cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, cst.OVERALL_XZ_RANGE]),
     initialPositions: initPositions,
     maximumVelocity: 0.01,
     attractionRepulsionBias: -0.25,
@@ -121,7 +118,7 @@ useFrame((state) => {
     // Make sure we have a result
     if (lastWorkerResult.current !== null) {
       // Update positions on all of the boid groups
-      for(let boidGroupIdx = 0; boidGroupIdx < CLOUD_COUNT; boidGroupIdx++) {
+      for(let boidGroupIdx = 0; boidGroupIdx < cst.CLOUD_COUNT; boidGroupIdx++) {
         const groupObject = cloudGroups.current[boidGroupIdx];
         const newPosition = lastWorkerResult.current.positions[boidGroupIdx];
 
