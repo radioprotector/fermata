@@ -87,8 +87,8 @@ fns.handleInit = function(data) {
   state.boundsLengthSquared = state.bounds.lengthSq();
 
   // Calculate clamping for velocities
-  state.velocityUpperClamp = state.bounds.clone().multiplyScalar(0.1);
-  state.velocityLowerClamp = state.bounds.clone().multiplyScalar(-0.1);
+  state.velocityUpperClamp = state.bounds.clone().multiplyScalar(0.075);
+  state.velocityLowerClamp = state.bounds.clone().multiplyScalar(-0.075);
 
   // Determine the number of boids
   state.length = data.initialPositions.length;
