@@ -1,5 +1,5 @@
 import { useRef, useMemo, useEffect } from "react";
-import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Object3D, Vector3, Color, AxesHelper } from "three";
+import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Object3D, Vector3, Color, AxesHelper, Group } from "three";
 import { useFrame } from "@react-three/fiber";
 
 import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from "./workerInterface";
@@ -15,7 +15,9 @@ export interface BoidCloudProps {
 };
 
 function BoidCloud(props: BoidCloudProps): JSX.Element {
+  const cloudGroupRef = useRef<Group>(null!);
   const instMeshRef = useRef<InstancedMesh>(null!);
+  const axesHelperRef = useRef<AxesHelper>(null);
   const dummyObject = useMemo(() => new Object3D(), []);
   const dummyColor = useMemo(() => new Color(), []);
 
@@ -96,9 +98,12 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       if (lastWorkerResult.current !== null) {
         // Update positions on all of the boids
         for(let boidIdx = 0; boidIdx < props.cloudSize; boidIdx++) {
+          // Rotate twice as slowly as the period
+          const boidRad = (state.clock.elapsedTime * Math.PI) / props.periodSeconds;
           const boidPosition = lastWorkerResult.current.positions[boidIdx];
 
           dummyObject.position.set(boidPosition[0], boidPosition[1], boidPosition[2]);
+          dummyObject.rotation.set(boidRad, 0, boidRad);
           dummyObject.updateMatrix();
           
           instMeshRef.current.setMatrixAt(boidIdx, dummyObject.matrix);
@@ -122,6 +127,15 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         instMeshRef.current.instanceMatrix.needsUpdate = true;
         instMeshRef.current.instanceColor!.needsUpdate = true;
 
+        // Update the axes helper if we have one.
+        // Orient it on the center of the boids and scale it by the stdev for each of the different axes
+        if (process.env.NODE_ENV !== 'production') {
+          if (axesHelperRef.current !== null) {
+            axesHelperRef.current.position.set(lastWorkerResult.current.means[0], lastWorkerResult.current.means[1], lastWorkerResult.current.means[2]);
+            axesHelperRef.current.scale.set(lastWorkerResult.current.stdevs[0], lastWorkerResult.current.stdevs[1], lastWorkerResult.current.stdevs[2]);
+          }
+        }
+
         // Clear the last worker result
         lastWorkerResult.current = null;
 
@@ -139,7 +153,8 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
   });
 
   return (
-    <group>
+    <group
+      ref={cloudGroupRef}>
       <instancedMesh
         ref={instMeshRef}
         args={[new TetrahedronGeometry(1), new MeshBasicMaterial({ color: props.baseColor }), props.cloudSize]}
@@ -149,7 +164,9 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       {
         process.env.NODE_ENV !== 'production'
         &&
-        <axesHelper args={[props.bounds.length() / 2]} />
+        <axesHelper
+          ref={axesHelperRef}
+          />
       }
     </group>
   );
