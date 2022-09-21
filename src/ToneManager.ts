@@ -112,6 +112,12 @@ class ToneManager {
 
   private bassPatternInitialized: boolean = false;
 
+  private _isPlaying: boolean = false;
+
+  get isPlaying(): boolean {
+    return this._isPlaying;
+  }
+
   constructor() {
     // Drum
     [this.drumInstrument, this.drumVolume] = buildDrumSampler();
@@ -190,6 +196,7 @@ class ToneManager {
     this.drumPattern.start(0);
     this.stringPattern.start(0);
     this.bassPattern.start(0);
+    this._isPlaying = true;
   }
  
   public stopPlayback = (): void =>  {
@@ -205,6 +212,8 @@ class ToneManager {
     if (this.stringPattern.state === 'started') {
       this.stringPattern.stop();
     }
+
+    this._isPlaying = false;
   }
 
   public dispose = (): void => {

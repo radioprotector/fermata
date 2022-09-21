@@ -11,6 +11,7 @@ export interface InterfaceControlsProps {
 }
 
 function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
+  // FIXME: Ensure that when the parent component swaps the tone manager, that audioPlaying reflects that state
   const [audioPlaying, setAudioPlaying] = useState(false);
   const toggleAudioClickHandler = async () => {
     if (!audioPlaying) {
@@ -18,6 +19,7 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
 
       setAudioPlaying(true);
       
+      // FUTURE: See if we can move this code into the tone manager handling, assuming async operations won't interfere with auto-play blocking
       Tone.Transport.bpm.value = 100;
       Tone.Transport.start();
       props.toneManager.startPlayback();

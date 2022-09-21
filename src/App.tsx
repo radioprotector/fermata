@@ -1,4 +1,4 @@
-import { Suspense, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { OrbitControls, Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 
@@ -11,6 +11,17 @@ function App(): JSX.Element {
   // Ensure we have a tone manager singleton shared across all of the components
   const toneManager = useRef<ToneManager>(new ToneManager());
 
+  useEffect(() => {
+    const currentToneManager = toneManager.current;
+
+    // Gracefully tear down the old tone manager when needed
+    return function cleanup() {
+      if (currentToneManager !== null) {
+        currentToneManager.dispose();
+      }
+    }
+  }, [toneManager])
+
   return (
     <div id="canvas-container">
       <Suspense fallback={null}>
@@ -21,6 +32,7 @@ function App(): JSX.Element {
             enableRotate={true}
             enableZoom={true}
             autoRotate={true}
+            autoRotateSpeed={4}
           />
           <BoidCloudContainer
             toneManager={toneManager.current}
