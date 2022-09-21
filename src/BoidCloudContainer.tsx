@@ -79,8 +79,14 @@ useEffect(() => {
   const initMessage: initMessageToWorker = {
     type: 'init',
     periodSeconds: CLOUD_PERIODS[CLOUD_PERIODS.length - 1],
-    bounds: new Float32Array([OVERALL_RADIUS, 1, OVERALL_RADIUS]),
-    initialPositions: initPositions
+    bounds: new Float32Array([OVERALL_RADIUS, 0, OVERALL_RADIUS]),
+    initialPositions: initPositions,
+    maximumVelocity: 0.01,
+    attractionRepulsionBias: -0.25,
+    attractionRepulsionIntensity: 0.001,
+    distancingThreshold: 0.2,
+    matchingVelocityIntensity: 0.0,
+    boundingReturnIntensity: 0.01
   };
 
   groupsWorker.current.postMessage(initMessage, initTransferObjects);

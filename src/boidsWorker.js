@@ -26,22 +26,46 @@ const state = {
   bounds: null,
 
   /**
-   * The length of the bounds.
-   * @type {Number}
-   */
-  boundsLengthSquared: 1.0,
-
-  /**
    * The upper clamp value to apply to the velocity.
    * @type {Vector3}
    */
   velocityUpperClamp: null,
 
-   /**
+  /**
     * The lower clamp value to apply to the velocity.
     * @type {Vector3}
     */
-  velocityLowerClamp: null, 
+  velocityLowerClamp: null,
+
+  /**
+   * The bias to apply for the attraction/repulsion factor, which normally oscillates between -1 (repulsion), and 1 (attraction).
+   * @type {Number}
+   */
+  attractionRepulsionBias: 0.0,
+
+  /**
+   * The intensity of the attraction/repulsion velocity, as a 0.0-1.0 percentage.
+   * @type {Number}
+   */
+  attractionRepulsionIntensity: 0.0,
+
+  /**
+   * The threshold for the distancing effect.
+   * @type {Number}
+   */
+  distancingLengthSquared: 0.0,
+
+  /**
+   * The intensity of the "matching" velocity, as a 0.0-1.0 percentage.
+   * @type {Number}
+   */
+  matchingVelocityIntensity: 0.0,
+
+  /**
+   * The intensity of the "return" velocity, as a 0.0-1.0 percentage.
+   * @type {Number}
+   */
+  boundingReturnIntensity: 0.0,
   
   /**
    * The totaled center of the boids.
@@ -84,11 +108,13 @@ fns.handleInit = function(data) {
 
   // Copy over the bounds array
   state.bounds = new Vector3(data.bounds[0], data.bounds[1], data.bounds[2]);
-  state.boundsLengthSquared = state.bounds.lengthSq();
+
+  // Determine the distance threshold based on the bounds and threshold
+  state.distancingLengthSquared = state.bounds.lengthSq() * data.distancingThreshold;
 
   // Calculate clamping for velocities
-  state.velocityUpperClamp = state.bounds.clone().multiplyScalar(0.075);
-  state.velocityLowerClamp = state.bounds.clone().multiplyScalar(-0.075);
+  state.velocityUpperClamp = state.bounds.clone().multiplyScalar(data.maximumVelocity);
+  state.velocityLowerClamp = state.bounds.clone().multiplyScalar(-data.maximumVelocity);
 
   // Determine the number of boids
   state.length = data.initialPositions.length;
@@ -111,15 +137,20 @@ fns.handleInit = function(data) {
     // Don't assign any velocities for now
     state.velocities.push(new Vector3());
   }
+
+  // Copy over new configurations
+  state.attractionRepulsionBias = data.attractionRepulsionBias;
+  state.attractionRepulsionIntensity = data.attractionRepulsionIntensity;
+  state.matchingVelocityIntensity = data.matchingVelocityIntensity;
+  state.boundingReturnIntensity = data.boundingReturnIntensity;
 };
 
 /**
- * Gets a velocity vector to congregate the boid on the center of mass.
+ * Gets a velocity vector to congregate/distance the boid to or from the center of mass.
  * @param {Number} boidIdx The index of the boid.
  * @returns {Vector3} The velocity vector to apply for centering.
  */
-fns.getCenterMassVector = function(boidIdx) {
-  const CENTERING_INTENSITY = 0.01;
+fns.getCenterMassAttractionRepulsionVector = function(boidIdx) {
   const currentPosition = state.positions[boidIdx];
 
   // Calculate the perceived center by removing the current position and turning it into an average
@@ -128,7 +159,7 @@ fns.getCenterMassVector = function(boidIdx) {
   perceivedCenter.divideScalar(state.length - 1);
 
   // Then multiply that average by a centering factor to determine the intensity of the snapping
-  return perceivedCenter.multiplyScalar(CENTERING_INTENSITY);
+  return perceivedCenter.multiplyScalar(state.attractionRepulsionIntensity);
 };
 
 /**
@@ -137,7 +168,6 @@ fns.getCenterMassVector = function(boidIdx) {
  * @returns {Vector3} The velocity vector to apply for distancing from other boids.
  */
 fns.getDistancingVector = function(boidIdx) {
-  const DISTANCE_THRESHOLD = state.boundsLengthSquared * 0.005;
   const currentPosition = state.positions[boidIdx];
   const distancingResult = new Vector3();
 
@@ -150,7 +180,7 @@ fns.getDistancingVector = function(boidIdx) {
     // If they are close enough, incorporate the distancing result into the velocity vector
     const otherPosition = state.positions[i];
 
-    if (currentPosition.distanceToSquared(otherPosition) < DISTANCE_THRESHOLD) {
+    if (currentPosition.distanceToSquared(otherPosition) < state.distancingLengthSquared) {
       distancingResult.sub(otherPosition).add(currentPosition);
     }
   }
@@ -164,7 +194,6 @@ fns.getDistancingVector = function(boidIdx) {
  * @returns {Vector3} The velocity vector to apply for speed-matching.
  */
 fns.getMatchingVector = function(boidIdx) {
-  const MATCHING_INTENSITY = 0.005;
   const currentVelocity = state.velocities[boidIdx];
 
   // Calculate the perceived velocity by removing the current velocity and turning it into an average
@@ -173,7 +202,7 @@ fns.getMatchingVector = function(boidIdx) {
   perceivedVelocity.divideScalar(state.length - 1);
 
   // Then multiply that average by a matching factor to determine the intensity of the snapping
-  return perceivedVelocity.multiplyScalar(MATCHING_INTENSITY);
+  return perceivedVelocity.multiplyScalar(state.matchingVelocityIntensity);
 };
 
 /**
@@ -182,32 +211,31 @@ fns.getMatchingVector = function(boidIdx) {
  * @returns {Vector3} The velocity vector to apply for staying within bounds.
  */
 fns.getBoundsVector = function (boidIdx) {
-  const RETURN_INTENSITY = 0.01;
   const returnVelocity = new Vector3();
   const currentPosition = state.positions[boidIdx];
 
   // Snap x-values
   if (currentPosition.x > state.bounds.x) {
-    returnVelocity.setX(state.bounds.x * -RETURN_INTENSITY);
+    returnVelocity.setX(state.bounds.x * -state.boundingReturnIntensity);
   }
   else if (currentPosition.x < -state.bounds.x) {
-    returnVelocity.setX(state.bounds.x * RETURN_INTENSITY);
+    returnVelocity.setX(state.bounds.x * state.boundingReturnIntensity);
   }
   
   // Snap y-values
   if (currentPosition.y > state.bounds.y) {
-    returnVelocity.setY(state.bounds.y * -RETURN_INTENSITY);
+    returnVelocity.setY(state.bounds.y * -state.boundingReturnIntensity);
   }
   else if (currentPosition.y < -state.bounds.y) {
-    returnVelocity.setY(state.bounds.y * RETURN_INTENSITY);
+    returnVelocity.setY(state.bounds.y * state.boundingReturnIntensity);
   }
 
   // Snap z-values
   if (currentPosition.z > state.bounds.z) {
-    returnVelocity.setZ(state.bounds.z * -RETURN_INTENSITY);
+    returnVelocity.setZ(state.bounds.z * -state.boundingReturnIntensity);
   }
   else if (currentPosition.z < -state.bounds.z) {
-    returnVelocity.setZ(state.bounds.z * RETURN_INTENSITY);
+    returnVelocity.setZ(state.bounds.z * state.boundingReturnIntensity);
   }
 
   return returnVelocity;
@@ -219,8 +247,9 @@ fns.getBoundsVector = function (boidIdx) {
  fns.handleReady = function() {
   // Determine the attraction/repulsion factor.
   // Get the elapsed time, add the offset, convert to radians, and divide by the period.
-  // This ensures that over time, we should oscillate between attraction and repulsion, slightly biased towards attraction
-  const attractionRepulsionFactor = Math.sin(((state.clock.getElapsedTime() + state.periodOffset) * 2 * Math.PI) / state.periodSeconds) + 0.5;
+  // This ensures that over time, we should oscillate between attraction and repulsion
+  const attractionRepulsionFactor = Math.sin(((state.clock.getElapsedTime() + state.periodOffset) * 2 * Math.PI) / state.periodSeconds)
+    + state.attractionRepulsionBias;
 
   // Track the new center and velocity
   const newCenterTotal = new Vector3();
@@ -231,7 +260,7 @@ fns.getBoundsVector = function (boidIdx) {
     const newVelocity = new Vector3();
 
     // Incorporate rule 1 with attraction/repulsion factored in
-    newVelocity.add(this.getCenterMassVector(boidIdx).multiplyScalar(attractionRepulsionFactor));
+    newVelocity.add(this.getCenterMassAttractionRepulsionVector(boidIdx).multiplyScalar(attractionRepulsionFactor));
 
     // Incorporate the other vectors without scaling
     newVelocity.add(this.getDistancingVector(boidIdx));
