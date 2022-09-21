@@ -2,6 +2,7 @@ import {  useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Color, Group, MathUtils, Vector3 } from 'three';
 
+import ToneManager from './ToneManager';
 import BoidCloud from './BoidCloud';
 import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from './workerInterface';
 
@@ -10,7 +11,11 @@ const CLOUD_RADIUS = 25;
 const CLOUD_COUNT = 6;
 const CLOUD_PERIODS: number[] = [8, 13, 21, 34, 55, 89, 144];
 
-function BoidCloudContainer(): JSX.Element {
+export interface BoidCloudContainerProps {
+  toneManager: ToneManager
+}
+
+function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
   // Create groups that contain BoidCloud elements, so we can individually control their position
   const cloudGroups = useRef<Group[]>([]);
   const cloudContainerElements =

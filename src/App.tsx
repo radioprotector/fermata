@@ -1,75 +1,15 @@
-import { Suspense } from 'react';
+import { Suspense, useRef } from 'react';
 import { OrbitControls, Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 
-// import * as Tone from 'tone';
-// import ToneManager from './ToneManager';
-
 import './App.css';
 import BoidCloudContainer from './BoidCloudContainer';
+import InterfaceControls from './InterfaceControls';
+import ToneManager from './ToneManager';
 
 function App(): JSX.Element {
-  // const toneManager = useRef<ToneManager | null>(null);
-
-  // const [bassVolume, setBassVolume] = useState(-15);
-  // const [drumVolume, setDrumVolume] = useState(-15);
-  // const [stringVolume, setStringVolume] = useState(-15);
-  // const [isPlaying, setIsPlaying] = useState(false);
-
-  // const handleVolumeChange = (e: React.FormEvent<HTMLInputElement>) => {
-  //   const input = e.target as HTMLInputElement;
-  //   const dbValue = parseFloat(input.value);
-
-  //   switch (input.name) {
-  //     case 'bassVolume':
-  //       if (toneManager.current !== null) {
-  //         toneManager.current.bassVolume.volume.value = dbValue;
-  //       }
-  //       setBassVolume(dbValue);
-  //       break;
-
-  //     case 'drumVolume':
-  //       if (toneManager.current !== null) {
-  //         toneManager.current.drumVolume.volume.value = dbValue;
-  //       }
-  //       setDrumVolume(dbValue);
-  //       break;
-
-  //     case 'stringVolume':
-  //       if (toneManager.current !== null) {
-  //         toneManager.current.stringVolume.volume.value = dbValue;
-  //       }
-  //       setStringVolume(dbValue);
-  //       break;
-  //   }
-  // }
-
-  // const handlePlayToggle = async () => {
-  //   if (!isPlaying) {
-  //     await Tone.start();
-
-  //     setIsPlaying(true);
-  //     Tone.Transport.bpm.value = 100;
-  //     Tone.Transport.start();
-
-  //     if (toneManager.current === null) {
-  //       toneManager.current = new ToneManager();
-  //       toneManager.current.bassVolume.volume.value = bassVolume;
-  //       toneManager.current.drumVolume.volume.value = drumVolume;
-  //       toneManager.current.stringVolume.volume.value = stringVolume;
-  //     }
-
-  //     toneManager.current.startPlayback();
-  //   }
-  //   else {
-  //     setIsPlaying(false);
-  //     Tone.Transport.pause();
-
-  //     if (toneManager.current !== null) {
-  //       toneManager.current.stopPlayback();
-  //     }
-  //   }
-  // };
+  // Ensure we have a tone manager singleton shared across all of the components
+  const toneManager = useRef<ToneManager>(new ToneManager());
 
   return (
     <div id="canvas-container">
@@ -82,8 +22,13 @@ function App(): JSX.Element {
             enableZoom={true}
             autoRotate={true}
           />
-          <BoidCloudContainer />
+          <BoidCloudContainer
+            toneManager={toneManager.current}
+          />
         </Canvas>
+        <InterfaceControls
+          toneManager={toneManager.current}
+        />
       </Suspense>
       {/* Only include stats in development */}
       {
@@ -95,55 +40,6 @@ function App(): JSX.Element {
         />
       }
     </div>
-
-    // <div>
-    //   <button
-    //     type="button"
-    //     onClick={handlePlayToggle}
-    //   >
-    //     {isPlaying && "Stop"}
-    //     {!isPlaying && "Start"}
-    //   </button>
-    //   <div>
-    //     <label>
-    //       Bass
-    //       <input
-    //         name="bassVolume"
-    //         type="range"
-    //         min="-50"
-    //         max="0"
-    //         value={bassVolume}
-    //         onInput={handleVolumeChange}
-    //       />
-    //     </label>
-    //   </div>
-    //   <div>
-    //     <label>
-    //       Drums
-    //       <input
-    //         name="drumVolume"
-    //         type="range"
-    //         min="-50"
-    //         max="0"
-    //         value={drumVolume}
-    //         onInput={handleVolumeChange}
-    //       />
-    //     </label>
-    //   </div>
-    //   <div>
-    //     <label>
-    //       Strings
-    //       <input
-    //         name="stringVolume"
-    //         type="range"
-    //         min="-50"
-    //         max="0"
-    //         value={stringVolume}
-    //         onInput={handleVolumeChange}
-    //       />
-    //     </label>
-    //   </div>
-    // </div>
   );
 }
 
