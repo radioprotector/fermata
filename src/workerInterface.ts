@@ -26,7 +26,7 @@ export interface resultMessageFromWorker {
 
   means: Float32Array;
 
-  variances: Float32Array;
+  stdevs: Float32Array;
 
   positions: Float32Array[]; 
 }

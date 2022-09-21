@@ -1,4 +1,4 @@
-import { Clock, Vector3 } from "three";
+import { Clock, Vector3, MathUtils } from "three";
 
 const state = {
   /**
@@ -91,7 +91,7 @@ fns.handleInit = function(data) {
   state.velocityLowerClamp = state.bounds.clone().multiplyScalar(-0.1);
 
   // Determine the number of boids
-  state.length = initialPositions.length;
+  state.length = data.initialPositions.length;
 
   if (state.length < 2) {
     throw Error('At least two boids must be provided!');
@@ -102,7 +102,7 @@ fns.handleInit = function(data) {
   state.totaledVelocity = new Vector3();
 
   // Create positions/velocities
-  for (const positionArray of initialPositions) {
+  for (const positionArray of data.initialPositions) {
     const positionVector = new Vector3(positionArray[0], positionArray[1], positionArray[2]);
 
     state.positions.push(positionVector);
@@ -118,8 +118,8 @@ fns.handleInit = function(data) {
  * @param {Number} boidIdx The index of the boid.
  * @returns {Vector3} The velocity vector to apply for centering.
  */
-fns.getCenteringVector = function(boidIdx) {
-  const CENTERING_INTENSITY = 0.05;
+fns.getCenterMassVector = function(boidIdx) {
+  const CENTERING_INTENSITY = 0.01;
   const currentPosition = state.positions[boidIdx];
 
   // Calculate the perceived center by removing the current position and turning it into an average
@@ -137,7 +137,7 @@ fns.getCenteringVector = function(boidIdx) {
  * @returns {Vector3} The velocity vector to apply for distancing from other boids.
  */
 fns.getDistancingVector = function(boidIdx) {
-  const DISTANCE_THRESHOLD = state.boundsLengthSquared * 0.05;
+  const DISTANCE_THRESHOLD = state.boundsLengthSquared * 0.005;
   const currentPosition = state.positions[boidIdx];
   const distancingResult = new Vector3();
 
@@ -164,7 +164,7 @@ fns.getDistancingVector = function(boidIdx) {
  * @returns {Vector3} The velocity vector to apply for speed-matching.
  */
 fns.getMatchingVector = function(boidIdx) {
-  const MATCHING_INTENSITY = 0.1;
+  const MATCHING_INTENSITY = 0.005;
   const currentVelocity = state.velocities[boidIdx];
 
   // Calculate the perceived velocity by removing the current velocity and turning it into an average
@@ -182,7 +182,7 @@ fns.getMatchingVector = function(boidIdx) {
  * @returns {Vector3} The velocity vector to apply for staying within bounds.
  */
 fns.getBoundsVector = function (boidIdx) {
-  const RETURN_INTENSITY = 0.1;
+  const RETURN_INTENSITY = 0.01;
   const returnVelocity = new Vector3();
   const currentPosition = state.positions[boidIdx];
 
@@ -218,8 +218,9 @@ fns.getBoundsVector = function (boidIdx) {
  */
  fns.handleReady = function() {
   // Determine the attraction/repulsion factor.
-  // Get the elapsed time, add the offset, convert to radians, and divide by the period
-  const attractionRepulsionFactor = Math.sin(((state.clock.getElapsedTime() + state.periodOffset) * 2 * Math.PI) / state.periodSeconds);
+  // Get the elapsed time, add the offset, convert to radians, and divide by the period.
+  // This ensures that over time, we should oscillate between attraction and repulsion, slightly biased towards attraction
+  const attractionRepulsionFactor = Math.sin(((state.clock.getElapsedTime() + state.periodOffset) * 2 * Math.PI) / state.periodSeconds) + 0.5;
 
   // Track the new center and velocity
   const newCenterTotal = new Vector3();
@@ -229,12 +230,12 @@ fns.getBoundsVector = function (boidIdx) {
   for (let boidIdx = 0; boidIdx < state.length; boidIdx++) {
     const newVelocity = new Vector3();
 
-    // Incorporate rules 1-3 with attraction/repulsion factored in
-    newVelocity.add(this.getCenteringVector(boidIdx).multiplyScalar(attractionRepulsionFactor));
-    newVelocity.add(this.getDistancingVector(boidIdx).multiplyScalar(attractionRepulsionFactor));
-    newVelocity.add(this.getMatchingVector(boidIdx).multiplyScalar(attractionRepulsionFactor));
+    // Incorporate rule 1 with attraction/repulsion factored in
+    newVelocity.add(this.getCenterMassVector(boidIdx).multiplyScalar(attractionRepulsionFactor));
 
-    // Incorporate bounds checking with no scaling
+    // Incorporate the other vectors without scaling
+    newVelocity.add(this.getDistancingVector(boidIdx));
+    newVelocity.add(this.getMatchingVector(boidIdx));
     newVelocity.add(this.getBoundsVector(boidIdx));
 
     // Now update the state vectors for the boid, ensuring velocity is clamped
@@ -255,7 +256,7 @@ fns.getBoundsVector = function (boidIdx) {
   const message = {
     type: 'result',
     means: [],
-    variances: [],
+    stdevs: [],
     positions: []
   };
 
@@ -290,11 +291,11 @@ fns.getBoundsVector = function (boidIdx) {
     transferObjects.push(positionArray.buffer);
   }
 
-  // Finish calculating variance
-  message.variances = [
-    varianceSumX / (state.length - 1),
-    varianceSumY / (state.length - 1), 
-    varianceSumZ / (state.length - 1)
+  // Finish calculating stdevs
+  message.stdevs = [
+    Math.max(Math.sqrt(varianceSumX / state.length), 0.01),
+    Math.max(Math.sqrt(varianceSumY / state.length), 0.01), 
+    Math.max(Math.sqrt(varianceSumZ / state.length), 0.01)
   ];
 
   // Post the message
