@@ -65,6 +65,8 @@ export interface initMessageToWorker {
 export interface resultMessageFromWorker {
   type: 'result';
 
+  clockPercentage: number;
+
   attractionRepulsionFactor: number;
 
   means: Float32Array;
