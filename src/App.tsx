@@ -1,11 +1,12 @@
 import { Suspense, useEffect, useRef } from 'react';
-import { OrbitControls, Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
+import { CubeCamera, OrbitControls, Stats } from '@react-three/drei';
 
 import './App.css';
 import BoidCloudContainer from './BoidCloudContainer';
 import InterfaceControls from './InterfaceControls';
 import ToneManager from './ToneManager';
+import { Texture } from 'three';
 
 function App(): JSX.Element {
   // Ensure we have a tone manager singleton shared across all of the components
@@ -37,6 +38,30 @@ function App(): JSX.Element {
           <BoidCloudContainer
             toneManager={toneManager.current}
           />
+          <CubeCamera>
+            {/*
+              HACK: Work around a typing issue that is present with CubeCamera
+              The sample code provided doesn't work, and I suspect it's a similar issue to:
+              https://github.com/pmndrs/drei/issues/913
+              https://github.com/pmndrs/drei/pull/959/commits/184e105fe06d64610c3d6982ad2f303fa6a43e52
+
+              Similarly, the typing for CubeCamera.children is:
+              "children: (tex: Texture) => React.ReactNode;"
+            */}
+            {((tex: Texture) => (
+              <mesh>
+                <sphereGeometry args={[10, 64, 64]} />
+                <meshStandardMaterial
+                  emissive={0xffffff}
+                  emissiveIntensity={0.01}
+                  fog={false}
+                  roughness={0}
+                  metalness={1}
+                  envMap={tex}
+                />
+              </mesh>
+            )) as any}
+          </CubeCamera>
         </Canvas>
         <InterfaceControls
           toneManager={toneManager.current}
