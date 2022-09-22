@@ -3,12 +3,12 @@ import { Note } from 'tone/build/esm/core/type/NoteUnits';
 /**
  * The X/Z range of the overall collection of clouds.
  */
-export const OVERALL_XZ_RANGE = 65;
+export const OVERALL_XZ_RANGE = 80;
 
 /**
  * The Y range of the overall collection of clouds.
  */
-export const OVERALL_Y_RANGE = 0;
+export const OVERALL_Y_RANGE = 5;
 
 /**
  * The inner radius of the overall collection of clouds.
@@ -19,12 +19,12 @@ export const OVERALL_XZ_INNER_RADIUS = 5;
 /**
  * The X/Z range of each individual boid cloud.
  */
-export const CLOUD_XZ_RANGE = 35;
+export const CLOUD_XZ_RANGE = 70;
 
 /**
  * The Y range of each individual boid cloud.
  */
-export const CLOUD_Y_RANGE = CLOUD_XZ_RANGE / 2;
+export const CLOUD_Y_RANGE = CLOUD_XZ_RANGE / 1.5;
 
 /**
  * The number of boid clouds that should be rendered.
@@ -41,7 +41,7 @@ export const CLOUD_POINT_SIZE = 40;
  * Will contain at least as many elements as {@see CLOUD_COUNT}.
  */
 // export const CLOUD_PERIOD_SECONDS: number[] = [3, 5, 8, 13, 21, 34, 55, 89, 144];
-export const CLOUD_PERIOD_SECONDS: number[] = [7, 11, 13, 17, 23, 29, 31, 37];
+export const CLOUD_PERIOD_SECONDS: number[] = [11, 13, 17, 23, 29, 31, 37];
 
 /**
  * Maps individual boid cloud indices to their base notes.

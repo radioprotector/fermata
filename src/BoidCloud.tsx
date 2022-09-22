@@ -1,5 +1,5 @@
 import { useRef, useMemo, useEffect } from "react";
-import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Object3D, Vector3, Color, AxesHelper, Group, WireframeGeometry, BoxGeometry } from "three";
+import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Object3D, Vector3, Color, AxesHelper, Group, BoxGeometry } from "three";
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 
@@ -77,13 +77,13 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       periodSeconds: props.periodSeconds,
       bounds: new Float32Array(props.bounds.toArray()),
       initialPositions: initPositions,
-      maximumVelocity: 0.05,
-      attractionRepulsionBias: -0.5,
-      attractionRepulsionIntensity: 0.025,
-      revertIntensity: 0.0,
+      maximumVelocity: 0.02,
+      attractionRepulsionBias: -0.9,
+      attractionRepulsionIntensity: 0.05,
+      revertIntensity: 0.005,
       distancingThreshold: 0.05,
       matchingVelocityIntensity: 0.01, // Should be less than the attraction/repulsion intensity
-      boundingReturnIntensity: 0.20
+      boundingReturnIntensity: 1
     };
 
     worker.current.postMessage(initMessage, initTransferObjects);
@@ -172,7 +172,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
             // HACK: Work around typing problem with drei's Text component 
             (debugTextRef.current as any).text = `µ: (${cloudMeanX.toFixed(1)}, ${cloudMeanY.toFixed(1)}, ${cloudMeanZ.toFixed(1)})\n` +
               `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)})\n` +
-              `f: ${(lastWorkerResult.current.attractionRepulsionFactor * 100).toFixed(1)} %`;
+              `o: ${(lastWorkerResult.current.clockPercentage * 100).toFixed(0)} % (${lastWorkerResult.current.attractionRepulsionFactor.toFixed(1)})`;
           }
           
           // Orient the axes helper on the center of the boids and scale it by the stdev for each of the different axes
@@ -210,7 +210,8 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         /* Only include bounding box in development */
         process.env.NODE_ENV !== 'production'
         &&
-        <lineSegments>
+        <lineSegments
+          visible={false}>
           <wireframeGeometry args={[new BoxGeometry(props.bounds.x * 2, props.bounds.y * 2, props.bounds.z * 2)]} />
           <lineBasicMaterial
             color={props.baseColor}
@@ -225,7 +226,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         &&
         <Text
           ref={debugTextRef}
-          visible={true}
+          visible={false}
           font="sans-serif"
           fontSize={4}
           color={0xffffff}
