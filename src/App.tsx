@@ -34,7 +34,7 @@ function App(): JSX.Element {
             enableRotate={true}
             enableZoom={true}
             autoRotate={true}
-            autoRotateSpeed={4}
+            autoRotateSpeed={1}
           />
           <Stars
             radius={2 * cst.OVERALL_XZ_RANGE}
