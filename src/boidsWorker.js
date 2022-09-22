@@ -290,7 +290,7 @@ fns.getBoundsVector = function (boidIdx) {
 
     // Incorporate rule 1 with attraction/repulsion factored in
     if (state.attractionRepulsionIntensity > 0.0 && state.attractionRepulsionFactor !== 0.0) {
-      newVelocity.add(this.getCenterMassAttractionRepulsionVector(boidIdx).multiplyScalar(attractionRepulsionFactor));
+      newVelocity.addScaledVector(this.getCenterMassAttractionRepulsionVector(boidIdx), attractionRepulsionFactor);
     }
 
     // Incorporate the other vectors without scaling
@@ -315,8 +315,8 @@ fns.getBoundsVector = function (boidIdx) {
     state.positions[boidIdx].add(state.velocities[boidIdx]);
 
     // Add to the running totals
-    state.totaledCenter.add(state.positions[boidIdx]);
-    state.totaledVelocity.add(state.velocities[boidIdx]);
+    newCenterTotal.add(state.positions[boidIdx]);
+    newVelocityTotal.add(state.velocities[boidIdx]);
   }
 
   // Update the center/velocity calculations
