@@ -29,7 +29,7 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
         position={[Math.cos(cloudRad) * distributionRadius, cst.OVERALL_Y_RANGE, Math.sin(cloudRad) * distributionRadius]}
       >
         <BoidCloud
-          cloudSize={30}
+          cloudSize={cst.CLOUD_POINT_SIZE}
           bounds={new Vector3(cst.CLOUD_XZ_RANGE, cst.CLOUD_Y_RANGE / 2, cst.CLOUD_XZ_RANGE)}
           periodSeconds={cst.CLOUD_PERIOD_SECONDS[cloudIndex]}
           baseColor={cloudBaseColor}

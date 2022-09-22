@@ -1,5 +1,5 @@
 import { useRef, useMemo, useEffect } from "react";
-import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Object3D, Vector3, Color, AxesHelper, Group } from "three";
+import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Object3D, Vector3, Color, AxesHelper, Group, WireframeGeometry, BoxGeometry } from "three";
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 
@@ -57,14 +57,16 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
     const initPositions: Float32Array[] = [];
     const initTransferObjects = [];
     const degOffset = MathUtils.randInt(0, 359);
+    const minXDispersal = props.bounds.x * 0.4;
+    const minZDispersal = props.bounds.z * 0.4;
 
     for(let boidIdx = 0; boidIdx < props.cloudSize; boidIdx++) {
       // Generate a position for the boid. Arrange them circularly around the y-axis, arranging from top-to-bottom
       const boidPosition = new Float32Array(3);
-      const boidRad = MathUtils.degToRad((boidIdx * 30) + degOffset);
-      boidPosition[0] = (props.bounds.x / 2) * Math.cos(boidRad);
-      boidPosition[1] = MathUtils.mapLinear(boidIdx, 0, props.cloudSize, -props.bounds.y / 2, props.bounds.y / 2);
-      boidPosition[2] = (props.bounds.z / 2) * Math.sin(boidRad);
+      const boidRad = MathUtils.degToRad((boidIdx * 30) + degOffset );
+      boidPosition[0] = minXDispersal + MathUtils.randFloatSpread((props.bounds.x / 1.5) * Math.cos(boidRad));
+      boidPosition[1] = MathUtils.mapLinear(boidIdx, 0, props.cloudSize, -props.bounds.y, props.bounds.y);
+      boidPosition[2] = minZDispersal + MathUtils.randFloatSpread((props.bounds.z / 1.5) * Math.sin(boidRad));
 
       initPositions.push(boidPosition);
       initTransferObjects.push(boidPosition.buffer);
@@ -127,7 +129,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           instMeshRef.current.setMatrixAt(boidIdx, dummyObject.matrix);
 
           // Calculate the z-stat of the boid position in each axis, converting to an absolute value and capping "extremes".
-          const Z_MAX = 3.0;
+          const Z_MAX = 1.5;
           const zStatX = Math.min(Math.abs((boidPosition[0] - cloudMeanX) / cloudStdevX), Z_MAX);
           const zStatY = Math.min(Math.abs((boidPosition[1] - cloudMeanY) / cloudStdevY), Z_MAX);
           const zStatZ = Math.min(Math.abs((boidPosition[2] - cloudMeanZ) / cloudStdevZ), Z_MAX);
@@ -148,18 +150,16 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         // Update the cloud audio chain if we have one
         if (props.audioChain != null && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
           // The closer the mean values are to 0, the more "accuracy" we have, which increases the prominence of the chords (the second input in the crossfade)
-          const deviationPercentage = (Math.abs(cloudMeanX / props.bounds.x) +
-            Math.abs(cloudMeanY / props.bounds.y) +
-            Math.abs(cloudMeanZ / props.bounds.z)) / 3;
+          const deviationPercentage = ((cloudMeanX / props.bounds.x) + (cloudMeanY / props.bounds.y) + (cloudMeanZ / props.bounds.z)) / 6;
 
-          props.audioChain.crossFade.fade.value = MathUtils.clamp(1 - deviationPercentage, 0, 1);
+          props.audioChain.crossFade.fade.rampTo(MathUtils.clamp(1 - deviationPercentage, 0, 1), MUSIC_SECONDS);
 
           // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the effect.
           const dispersalPercentage = (Math.abs(cloudStdevX / props.bounds.x) +
             Math.abs(cloudStdevY / props.bounds.y) +
             Math.abs(cloudStdevZ / props.bounds.z)) / 3;
 
-          props.audioChain.effect.wet.value = MathUtils.clamp(dispersalPercentage, 0, 1);
+          props.audioChain.effect.wet.rampTo(MathUtils.clamp(dispersalPercentage, 0, 1), MUSIC_SECONDS);
 
           // Indicate when the music was updated
           lastMusicTime.current = state.clock.elapsedTime;
@@ -171,7 +171,8 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           if (debugTextRef.current !== null) {
             // HACK: Work around typing problem with drei's Text component 
             (debugTextRef.current as any).text = `µ: (${cloudMeanX.toFixed(1)}, ${cloudMeanY.toFixed(1)}, ${cloudMeanZ.toFixed(1)})\n` +
-              `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)})`;
+              `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)})\n` +
+              `f: ${(lastWorkerResult.current.attractionRepulsionFactor * 100).toFixed(1)} %`;
           }
           
           // Orient the axes helper on the center of the boids and scale it by the stdev for each of the different axes
@@ -206,12 +207,25 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         visible={false}
       />
       {
+        /* Only include bounding box in development */
+        process.env.NODE_ENV !== 'production'
+        &&
+        <lineSegments>
+          <wireframeGeometry args={[new BoxGeometry(props.bounds.x * 2, props.bounds.y * 2, props.bounds.z * 2)]} />
+          <lineBasicMaterial
+            color={props.baseColor}
+            depthTest={false}
+            transparent={true}
+          />
+        </lineSegments>
+      }
+      {
         /* Only include debug text in development */
         process.env.NODE_ENV !== 'production'
         &&
         <Text
           ref={debugTextRef}
-          visible={false}
+          visible={true}
           font="sans-serif"
           fontSize={4}
           color={0xffffff}
