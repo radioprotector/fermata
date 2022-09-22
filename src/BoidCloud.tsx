@@ -1,6 +1,7 @@
 import { useRef, useMemo, useEffect } from "react";
 import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Object3D, Vector3, Color, AxesHelper, Group } from "three";
 import { useFrame } from "@react-three/fiber";
+import { Text } from "@react-three/drei";
 
 import { CloudAudioChain } from "./ToneManager";
 import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from "./workerInterface";
@@ -20,6 +21,7 @@ export interface BoidCloudProps {
 function BoidCloud(props: BoidCloudProps): JSX.Element {
   const cloudGroupRef = useRef<Group>(null!);
   const instMeshRef = useRef<InstancedMesh>(null!);
+  const debugTextRef = useRef<Text>(null);
   const axesHelperRef = useRef<AxesHelper>(null);
   const dummyObject = useMemo(() => new Object3D(), []);
   const dummyColor = useMemo(() => new Color(), []);
@@ -108,6 +110,13 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
     if (state.clock.elapsedTime > lastRenderTime.current + FRAME_SECONDS) {
       // Make sure we have a result
       if (lastWorkerResult.current !== null) {
+        const cloudMeanX = lastWorkerResult.current.means[0];
+        const cloudMeanY = lastWorkerResult.current.means[1];
+        const cloudMeanZ = lastWorkerResult.current.means[2];
+        const cloudStdevX = lastWorkerResult.current.stdevs[0];
+        const cloudStdevY = lastWorkerResult.current.stdevs[1];
+        const cloudStdevZ = lastWorkerResult.current.stdevs[2];
+
         // Update positions on all of the boids
         for(let boidIdx = 0; boidIdx < props.cloudSize; boidIdx++) {
           const boidPosition = lastWorkerResult.current.positions[boidIdx];
@@ -120,9 +129,9 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           // Calculate the z-stat of the boid position in each axis, converting to an absolute value and capping "extremes".
           // Because the y-range is limited compared to the other two axes, we're blending it with the X/Z values
           const Z_MAX = 3.0;
-          const zStatX = Math.min(Math.abs((boidPosition[0] - lastWorkerResult.current.means[0]) / lastWorkerResult.current.stdevs[0]), Z_MAX);
-          const zStatZ = Math.min(Math.abs((boidPosition[2] - lastWorkerResult.current.means[2]) / lastWorkerResult.current.stdevs[2]), Z_MAX);
-          let zStatY = Math.min(Math.abs((boidPosition[1] - lastWorkerResult.current.means[1]) / lastWorkerResult.current.stdevs[1]), Z_MAX);
+          const zStatX = Math.min(Math.abs((boidPosition[0] - cloudMeanX) / cloudStdevX), Z_MAX);
+          const zStatZ = Math.min(Math.abs((boidPosition[2] - cloudMeanZ) / cloudStdevZ), Z_MAX);
+          let zStatY = Math.min(Math.abs((boidPosition[1] - cloudMeanY) / cloudStdevY), Z_MAX);
           zStatY = (zStatX + zStatY + zStatZ) / 3.0;
 
           // Further darken the color based on its distance from the center of mass
@@ -141,16 +150,16 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         // Update the cloud audio chain if we have one
         if (props.audioChain != null && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
           // The closer the mean values are to 0, the more "accuracy" we have, which increases the prominence of the chords (the second input in the crossfade)
-          const deviationPercentage = (Math.abs(lastWorkerResult.current.means[0] / props.bounds.x) +
-            Math.abs(lastWorkerResult.current.means[1] / props.bounds.y) +
-            Math.abs(lastWorkerResult.current.means[2] / props.bounds.z)) / 3;
+          const deviationPercentage = (Math.abs(cloudMeanX / props.bounds.x) +
+            Math.abs(cloudMeanY / props.bounds.y) +
+            Math.abs(cloudMeanZ / props.bounds.z)) / 3;
 
           props.audioChain.crossFade.fade.value = MathUtils.clamp(1 - deviationPercentage, 0, 1);
 
           // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the effect.
-          const dispersalPercentage = (Math.abs(lastWorkerResult.current.stdevs[0] / props.bounds.x) +
-            Math.abs(lastWorkerResult.current.stdevs[1] / props.bounds.y) +
-            Math.abs(lastWorkerResult.current.stdevs[2] / props.bounds.z)) / 3;
+          const dispersalPercentage = (Math.abs(cloudStdevX / props.bounds.x) +
+            Math.abs(cloudStdevY / props.bounds.y) +
+            Math.abs(cloudStdevZ / props.bounds.z)) / 3;
 
           props.audioChain.effect.wet.value = MathUtils.clamp(dispersalPercentage, 0, 1);
 
@@ -158,12 +167,19 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           lastMusicTime.current = state.clock.elapsedTime;
         }
 
-        // Update the axes helper if we have one.
-        // Orient it on the center of the boids and scale it by the stdev for each of the different axes
+        // Update debug contents if we have them
         if (process.env.NODE_ENV !== 'production') {
+          // Update debug text
+          if (debugTextRef.current !== null) {
+            // HACK: Work around typing problem with drei's Text component 
+            (debugTextRef.current as any).text = `µ: (${cloudMeanX.toFixed(1)}, ${cloudMeanY.toFixed(1)}, ${cloudMeanZ.toFixed(1)})\n` +
+              `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)})`;
+          }
+          
+          // Orient the axes helper on the center of the boids and scale it by the stdev for each of the different axes
           if (axesHelperRef.current !== null) {
-            axesHelperRef.current.position.set(lastWorkerResult.current.means[0], lastWorkerResult.current.means[1], lastWorkerResult.current.means[2]);
-            axesHelperRef.current.scale.set(lastWorkerResult.current.stdevs[0], lastWorkerResult.current.stdevs[1], lastWorkerResult.current.stdevs[2]);
+            axesHelperRef.current.position.set(cloudMeanX, cloudMeanY, cloudMeanZ);
+            axesHelperRef.current.scale.set(cloudStdevX, cloudStdevY, cloudStdevZ);
           }
         }
 
@@ -191,8 +207,22 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         args={[new TetrahedronGeometry(1), new MeshBasicMaterial({ color: props.baseColor }), props.cloudSize]}
         visible={false}
       />
-      {/* Only include axes in development */}
       {
+        /* Only include debug text in development */
+        process.env.NODE_ENV !== 'production'
+        &&
+        <Text
+          ref={debugTextRef}
+          font="sans-serif"
+          fontSize={4}
+          color={0xffffff}
+          anchorX="center"
+          anchorY="middle"
+        >
+        </Text>
+      }
+      {
+        /* Only include axes in development */
         process.env.NODE_ENV !== 'production'
         &&
         <axesHelper
