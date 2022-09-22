@@ -327,6 +327,7 @@ fns.getBoundsVector = function (boidIdx) {
   const transferObjects = [];
   const message = {
     type: 'result',
+    attractionRepulsionFactor: attractionRepulsionFactor,
     means: [],
     stdevs: [],
     positions: []
