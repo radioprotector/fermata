@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import { PolySynth } from 'tone';
 import { Note } from 'tone/build/esm/core/type/NoteUnits';
+import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect';
 import { Instrument, InstrumentOptions } from 'tone/build/esm/instrument/Instrument';
 
 import * as cst from './constants';
@@ -78,14 +79,14 @@ function buildCloudChain(cloudIdx: number): CloudAudioChain {
   const volume = new Tone.Volume(-20);
   volume.toDestination();
 
-  // Create a chorus node and connect it to the volume output
-  const chorus = new Tone.Chorus(baseFrequency, (cloudIdx + 1) * 2, 0.5);
-  chorus.wet.value = 0;
-  chorus.connect(volume);
+  // Create a reverb node and connect it to the volume output
+  const reverb = new Tone.Reverb((cloudIdx + 1) * 0.5);
+  reverb.wet.value = 0;
+  reverb.connect(volume);
 
   // Create a cross-fade for the chord and polysynth
   const crossFade = new Tone.CrossFade(0);
-  crossFade.connect(chorus);
+  crossFade.connect(reverb);
 
   // Create a base instrument
   const baseInstrument = new Tone.AMSynth();
@@ -101,7 +102,7 @@ function buildCloudChain(cloudIdx: number): CloudAudioChain {
     baseInstrument,
     chordInstrument,
     crossFade,
-    chorus,
+    effect: reverb,
     volume
   };
 }
@@ -120,7 +121,10 @@ export interface CloudAudioChain {
 
   crossFade: Tone.CrossFade;
 
-  chorus: Tone.Chorus;
+  /**
+   * The effect to apply to the cloud, in which its wetness is variable based on cloud dispersal.
+   */
+  effect: Effect<EffectOptions>;
 
   volume: Tone.Volume;
 }

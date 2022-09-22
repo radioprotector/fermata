@@ -24,9 +24,11 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
   const dummyObject = useMemo(() => new Object3D(), []);
   const dummyColor = useMemo(() => new Color(), []);
 
-  // Track when we last updated the buffers
+  // Track when we last updated the geometry/music
   const lastRenderTime = useRef(0);
-  const FRAME_SECONDS = 1/30;  
+  const lastMusicTime = useRef(0);
+  const FRAME_SECONDS = 1/30;
+  const MUSIC_SECONDS = 1/10;
 
   // Create a web worker to handle the boid processing
   const lastWorkerResult = useRef<resultMessageFromWorker | null>(null);
@@ -137,7 +139,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         instMeshRef.current.instanceColor!.needsUpdate = true;
 
         // Update the cloud audio chain if we have one
-        if (props.audioChain != null) {
+        if (props.audioChain != null && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
           // The closer the mean values are to 0, the more "accuracy" we have, which increases the prominence of the chords (the second input in the crossfade)
           const deviationPercentage = (Math.abs(lastWorkerResult.current.means[0] / props.bounds.x) +
             Math.abs(lastWorkerResult.current.means[1] / props.bounds.y) +
@@ -145,12 +147,15 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
 
           props.audioChain.crossFade.fade.value = MathUtils.clamp(1 - deviationPercentage, 0, 1);
 
-          // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the chorus.
+          // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the effect.
           const dispersalPercentage = (Math.abs(lastWorkerResult.current.stdevs[0] / props.bounds.x) +
             Math.abs(lastWorkerResult.current.stdevs[1] / props.bounds.y) +
             Math.abs(lastWorkerResult.current.stdevs[2] / props.bounds.z)) / 3;
 
-          // props.audioChain.chorus.wet.value = MathUtils.clamp(dispersalPercentage, 0, 1);
+          props.audioChain.effect.wet.value = MathUtils.clamp(dispersalPercentage, 0, 1);
+
+          // Indicate when the music was updated
+          lastMusicTime.current = state.clock.elapsedTime;
         }
 
         // Update the axes helper if we have one.
