@@ -76,12 +76,12 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       bounds: new Float32Array(props.bounds.toArray()),
       initialPositions: initPositions,
       maximumVelocity: 0.05,
-      attractionRepulsionBias: 0.35,
+      attractionRepulsionBias: -0.5,
       attractionRepulsionIntensity: 0.025,
       revertIntensity: 0.0,
-      distancingThreshold: 0.005,
-      matchingVelocityIntensity: 0.01,
-      boundingReturnIntensity: 0.02
+      distancingThreshold: 0.05,
+      matchingVelocityIntensity: 0.01, // Should be less than the attraction/repulsion intensity
+      boundingReturnIntensity: 0.20
     };
 
     worker.current.postMessage(initMessage, initTransferObjects);
@@ -127,12 +127,10 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           instMeshRef.current.setMatrixAt(boidIdx, dummyObject.matrix);
 
           // Calculate the z-stat of the boid position in each axis, converting to an absolute value and capping "extremes".
-          // Because the y-range is limited compared to the other two axes, we're blending it with the X/Z values
           const Z_MAX = 3.0;
           const zStatX = Math.min(Math.abs((boidPosition[0] - cloudMeanX) / cloudStdevX), Z_MAX);
+          const zStatY = Math.min(Math.abs((boidPosition[1] - cloudMeanY) / cloudStdevY), Z_MAX);
           const zStatZ = Math.min(Math.abs((boidPosition[2] - cloudMeanZ) / cloudStdevZ), Z_MAX);
-          let zStatY = Math.min(Math.abs((boidPosition[1] - cloudMeanY) / cloudStdevY), Z_MAX);
-          zStatY = (zStatX + zStatY + zStatZ) / 3.0;
 
           // Further darken the color based on its distance from the center of mass
           dummyColor.setRGB(
@@ -213,6 +211,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         &&
         <Text
           ref={debugTextRef}
+          visible={false}
           font="sans-serif"
           fontSize={4}
           color={0xffffff}

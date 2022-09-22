@@ -85,13 +85,13 @@ useEffect(() => {
     periodSeconds: cst.CLOUD_PERIOD_SECONDS[cst.CLOUD_PERIOD_SECONDS.length - 1],
     bounds: new Float32Array([cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, cst.OVERALL_XZ_RANGE]),
     initialPositions: initPositions,
-    maximumVelocity: 0.01,
-    attractionRepulsionBias: -0.25,
-    attractionRepulsionIntensity: 0.001,
-    revertIntensity: 0.001,
+    maximumVelocity: 0.005,
+    attractionRepulsionBias: -0.75,
+    attractionRepulsionIntensity: 0.01,
+    revertIntensity: 0.05,
     distancingThreshold: 0.2,
     matchingVelocityIntensity: 0.0,
-    boundingReturnIntensity: 0.01
+    boundingReturnIntensity: 0.25
   };
 
   groupsWorker.current.postMessage(initMessage, initTransferObjects);

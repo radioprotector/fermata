@@ -210,7 +210,7 @@ fns.getDistancingVector = function(boidIdx) {
     const otherPosition = state.positions[i];
 
     if (currentPosition.distanceToSquared(otherPosition) < state.distancingLengthSquared) {
-      distancingResult.sub(otherPosition).add(currentPosition);
+      distancingResult.add(otherPosition).sub(currentPosition);
     }
   }
 
