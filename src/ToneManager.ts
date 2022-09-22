@@ -70,6 +70,7 @@ const fullDrumSequence = drumPatternsArray.flat(1);
 
 function buildCloudChain(cloudIdx: number): CloudAudioChain {
   // Determine the base note to use
+  const baseFrequency = cst.CLOUD_PERIOD_SECONDS[cloudIdx];
   const baseNote = cst.CLOUD_BASE_NOTES[cloudIdx];
   const noteHarmonies = Tone.Frequency(baseNote).harmonize([0, 4, 7]).map((fc) => fc.toFrequency());
 
@@ -77,14 +78,14 @@ function buildCloudChain(cloudIdx: number): CloudAudioChain {
   const volume = new Tone.Volume(-20);
   volume.toDestination();
 
-  // Create a reverb node and connect it to the volume output
-  const reverb = new Tone.Reverb(cloudIdx * 0.5);
-  reverb.wet.value = 0;
-  reverb.connect(volume);
+  // Create a chorus node and connect it to the volume output
+  const chorus = new Tone.Chorus(baseFrequency, (cloudIdx + 1) * 2, 0.5);
+  chorus.wet.value = 0;
+  chorus.connect(volume);
 
   // Create a cross-fade for the chord and polysynth
   const crossFade = new Tone.CrossFade(0);
-  crossFade.connect(reverb);
+  crossFade.connect(chorus);
 
   // Create a base instrument
   const baseInstrument = new Tone.AMSynth();
@@ -100,7 +101,7 @@ function buildCloudChain(cloudIdx: number): CloudAudioChain {
     baseInstrument,
     chordInstrument,
     crossFade,
-    reverb,
+    chorus,
     volume
   };
 }
@@ -119,7 +120,7 @@ export interface CloudAudioChain {
 
   crossFade: Tone.CrossFade;
 
-  reverb: Tone.Reverb;
+  chorus: Tone.Chorus;
 
   volume: Tone.Volume;
 }

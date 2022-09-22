@@ -111,10 +111,6 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           const boidPosition = lastWorkerResult.current.positions[boidIdx];
           dummyObject.position.set(boidPosition[0], boidPosition[1], boidPosition[2]);
 
-          // Rotate twice as slowly as the period
-          const boidRad = (state.clock.elapsedTime * Math.PI) / props.periodSeconds;
-          dummyObject.rotation.set(boidRad, 0, boidRad);
-
           dummyObject.updateMatrix();
           
           instMeshRef.current.setMatrixAt(boidIdx, dummyObject.matrix);
@@ -149,12 +145,12 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
 
           props.audioChain.crossFade.fade.value = MathUtils.clamp(1 - deviationPercentage, 0, 1);
 
-          // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the reverb.
+          // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the chorus.
           const dispersalPercentage = (Math.abs(lastWorkerResult.current.stdevs[0] / props.bounds.x) +
             Math.abs(lastWorkerResult.current.stdevs[1] / props.bounds.y) +
             Math.abs(lastWorkerResult.current.stdevs[2] / props.bounds.z)) / 3;
 
-          props.audioChain.reverb.wet.value = MathUtils.clamp(dispersalPercentage, 0, 1);
+          // props.audioChain.chorus.wet.value = MathUtils.clamp(dispersalPercentage, 0, 1);
         }
 
         // Update the axes helper if we have one.
