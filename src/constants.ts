@@ -3,12 +3,18 @@ import { Note } from 'tone/build/esm/core/type/NoteUnits';
 /**
  * The X/Z range of the overall collection of clouds.
  */
-export const OVERALL_XZ_RANGE = 70;
+export const OVERALL_XZ_RANGE = 65;
 
 /**
  * The Y range of the overall collection of clouds.
  */
 export const OVERALL_Y_RANGE = 0;
+
+/**
+ * The inner radius of the overall collection of clouds.
+ * Used to further spread out the collection from the center without impacting the bounds.
+ */
+export const OVERALL_XZ_INNER_RADIUS = 10;
 
 /**
  * The X/Z range of each individual boid cloud.

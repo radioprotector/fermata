@@ -21,11 +21,12 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
       cloudBaseColor.setHSL(cloudIndex / cst.CLOUD_COUNT, 0.5, 0.4);
 
       const cloudRad = MathUtils.degToRad(MathUtils.mapLinear(cloudIndex, 0, cst.CLOUD_COUNT, 0, 360));
+      const distributionRadius = cst.OVERALL_XZ_RANGE + cst.OVERALL_XZ_INNER_RADIUS;
 
       return <group
         key={cloudIndex}
         ref={(grp: Group) => cloudGroups.current[cloudIndex] = grp}
-        position={[Math.cos(cloudRad) * cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, Math.sin(cloudRad) * cst.OVERALL_XZ_RANGE]}
+        position={[Math.cos(cloudRad) * distributionRadius, cst.OVERALL_Y_RANGE, Math.sin(cloudRad) * distributionRadius]}
       >
         <BoidCloud
           cloudSize={30}

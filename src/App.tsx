@@ -1,12 +1,13 @@
 import { Suspense, useEffect, useRef } from 'react';
+import { Texture } from 'three';
 import { Canvas } from '@react-three/fiber';
-import { CubeCamera, OrbitControls, Stats } from '@react-three/drei';
+import { CubeCamera, OrbitControls, Stars, Stats } from '@react-three/drei';
 
 import './App.css';
+import * as cst from './constants';
 import BoidCloudContainer from './BoidCloudContainer';
 import InterfaceControls from './InterfaceControls';
 import ToneManager from './ToneManager';
-import { Texture } from 'three';
 
 function App(): JSX.Element {
   // Ensure we have a tone manager singleton shared across all of the components
@@ -35,10 +36,12 @@ function App(): JSX.Element {
             autoRotate={true}
             autoRotateSpeed={4}
           />
+          <Stars />
           <BoidCloudContainer
             toneManager={toneManager.current}
           />
-          <CubeCamera>
+          {/* Cap the camera at the far range of the individual clouds, especially so it doesn't pick up the star fields in the reflection */}
+          <CubeCamera far={cst.OVERALL_XZ_RANGE + cst.CLOUD_XZ_RANGE + cst.OVERALL_XZ_INNER_RADIUS}>
             {/*
               HACK: Work around a typing issue that is present with CubeCamera
               The sample code provided doesn't work, and I suspect it's a similar issue to:
