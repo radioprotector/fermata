@@ -18,7 +18,7 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
   const cloudContainerElements =
     [0, 1, 2, 3, 4, 5].map((cloudIndex) => {
       const cloudBaseColor = new Color();
-      cloudBaseColor.setHSL(cloudIndex / cst.CLOUD_COUNT, 0.5, 0.4);
+      cloudBaseColor.setHSL(cloudIndex / cst.CLOUD_COUNT, 0.6, 0.3);
 
       const cloudRad = MathUtils.degToRad(MathUtils.mapLinear(cloudIndex, 0, cst.CLOUD_COUNT, 0, 360));
       const distributionRadius = cst.OVERALL_XZ_RANGE + cst.OVERALL_XZ_INNER_RADIUS;
