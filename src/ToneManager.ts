@@ -1,7 +1,8 @@
 import * as Tone from 'tone';
-import { PolySynth } from 'tone';
+import { PolySynth, ToneAudioNode, ToneAudioNodeOptions } from 'tone';
 import { Note } from 'tone/build/esm/core/type/NoteUnits';
 import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect';
+import { StereoEffect, StereoEffectOptions } from 'tone/build/esm/effect/StereoEffect';
 import { Instrument, InstrumentOptions } from 'tone/build/esm/instrument/Instrument';
 
 import * as cst from './constants';
@@ -69,40 +70,46 @@ const drumPatternsArray: (Note | Note[])[][] = [
 
 const fullDrumSequence = drumPatternsArray.flat(1);
 
-function buildCloudChain(cloudIdx: number): CloudAudioChain {
+function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAudioNodeOptions>): CloudAudioChain {
+  // Get the period for this cloud
+  const periodSeconds = cst.CLOUD_PERIOD_SECONDS[cloudIdx];
+
   // Determine the base note to use
-  const baseFrequency = cst.CLOUD_PERIOD_SECONDS[cloudIdx];
   const baseNote = cst.CLOUD_BASE_NOTES[cloudIdx];
-  const noteHarmonies = Tone.Frequency(baseNote).harmonize([0, 4, 7]).map((fc) => fc.toFrequency());
+  const chordFrequencies = Tone.Frequency(baseNote).harmonize([0, 4, 7]).map((fc) => fc.toFrequency());
 
   // Create a volume node and connect it to the main destination
-  const volume = new Tone.Volume(-20);
-  volume.toDestination();
+  const volume = new Tone.Volume(-25);
+  volume.connect(destinationNode);
 
-  // Create a reverb node and connect it to the volume output
-  const reverb = new Tone.Reverb((cloudIdx + 1) * 0.5);
-  reverb.wet.value = 0;
-  reverb.connect(volume);
+  // // Create a reverb node and connect it to the volume output
+  // const reverb = new Tone.Reverb((cloudIdx + 1) * 0.5);
+  // reverb.wet.value = 0;
+  // reverb.connect(volume);
+  const tremolo = new Tone.Tremolo((cloudIdx * 0.5) + 1, 0.75);
+  tremolo.wet.value = 0;
+  tremolo.connect(volume);
 
   // Create a cross-fade for the chord and polysynth
   const crossFade = new Tone.CrossFade(0);
-  crossFade.connect(reverb);
+  crossFade.connect(tremolo);
 
   // Create a base instrument
   const baseInstrument = new Tone.AMSynth();
-  baseInstrument.triggerAttack(baseNote);
   baseInstrument.connect(crossFade.a);
 
   // Create a polysynth for the chord
   const chordInstrument = new Tone.PolySynth(Tone.AMSynth);
-  chordInstrument.triggerAttack(noteHarmonies);
   chordInstrument.connect(crossFade.b);
 
   return {
+    periodSeconds,
+    baseNote,
     baseInstrument,
+    chordFrequencies,
     chordInstrument,
     crossFade,
-    effect: reverb,
+    effect: tremolo,
     volume
   };
 }
@@ -115,7 +122,13 @@ const blankPattern = new Tone.Pattern({ values: [Rest, Rest] as Note[] });
  * Describes a tone chain for a particular boid cloud.
  */
 export interface CloudAudioChain {
+  periodSeconds: number;
+
+  baseNote: Tone.Unit.Frequency;
+
   baseInstrument: Instrument<InstrumentOptions>;
+
+  chordFrequencies: Tone.Unit.Frequency[];
 
   chordInstrument: PolySynth;
 
@@ -124,7 +137,7 @@ export interface CloudAudioChain {
   /**
    * The effect to apply to the cloud, in which its wetness is variable based on cloud dispersal.
    */
-  effect: Effect<EffectOptions>;
+  effect: Effect<EffectOptions> | StereoEffect<StereoEffectOptions>;
 
   volume: Tone.Volume;
 }
@@ -133,6 +146,8 @@ class ToneManager {
 
   public readonly cloudChains: CloudAudioChain[];
 
+  private readonly chainReceiverNode: Tone.Gain;
+
   private _isPlaying: boolean = false;
 
   get isPlaying(): boolean {
@@ -140,11 +155,15 @@ class ToneManager {
   }
 
   constructor() {
+    // Create a gain node to receive all of the instruments
+    this.chainReceiverNode = new Tone.Gain();
+    this.chainReceiverNode.toDestination();
+
     // Create cloud instrument chains
     this.cloudChains = [];
 
     for(let cloudIdx = 0; cloudIdx < cst.CLOUD_COUNT; cloudIdx++) {
-      this.cloudChains.push(buildCloudChain(cloudIdx));
+      this.cloudChains.push(buildCloudChain(cloudIdx, this.chainReceiverNode));
     }
 
     // // Drum
@@ -152,11 +171,15 @@ class ToneManager {
   }
   
   public registerPatterns = async (shouldOverwrite: boolean = true): Promise<void> => {
-    // const stringNotes = ['C3', 'D3', 'C2', 'C4'] as Note[];
-    // const bassNotes = ['C2', 'C2', Rest, 'B2', 'B2', Rest, 'A2', 'D2', 'A2', Rest] as Note[];
-
     return Tone.loaded()
       .then(() => {
+        for(const cloudChain of this.cloudChains) {
+          new Tone.Loop(() => {
+            cloudChain.baseInstrument.triggerAttack(cloudChain.baseNote);
+            cloudChain.chordInstrument.triggerAttack(cloudChain.chordFrequencies);
+          }, cloudChain.periodSeconds).start(0);
+        }
+
       // // See if we need to initialize or overwrite the drums
       // if (!this.drumPatternInitialized || shouldOverwrite) {
       //   // Dispose existing drum
