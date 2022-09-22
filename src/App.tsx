@@ -36,7 +36,11 @@ function App(): JSX.Element {
             autoRotate={true}
             autoRotateSpeed={4}
           />
-          <Stars />
+          <Stars
+            radius={2 * cst.OVERALL_XZ_RANGE}
+            speed={0}
+            count={1000}
+          />
           <BoidCloudContainer
             toneManager={toneManager.current}
           />
