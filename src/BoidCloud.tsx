@@ -153,7 +153,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           // The closer the mean values are to 0, the more "accuracy" we have, which increases the prominence of the chords (the second input in the crossfade)
           const deviationPercentage = ((cloudMeanX / props.bounds.x) + (cloudMeanY / props.bounds.y) + (cloudMeanZ / props.bounds.z)) / 6;
 
-          props.audioChain.crossFade.fade.rampTo(MathUtils.clamp(1 - deviationPercentage, 0, 1), MUSIC_SECONDS);
+          props.audioChain.crossFade.fade.value = MathUtils.clamp(1 - deviationPercentage, 0, 1);
 
           // // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the effect.
           // const dispersalPercentage = (Math.abs(cloudStdevX / props.bounds.x) +

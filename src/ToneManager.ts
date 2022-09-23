@@ -153,7 +153,7 @@ class ToneManager {
   }
 
   constructor() {
-    toneSetContext(new Context({ latencyHint : 'playback' }));
+    toneSetContext(new Context({ latencyHint : 'playback', lookAhead: 0 }));
 
     // Create a gain node to receive all of the instruments
     this.chainReceiverNode = new Gain();
