@@ -363,8 +363,8 @@ fns.getBoundsVector = function (boidIdx) {
   // This ensures that over time, we should oscillate between attraction and repulsion (assuming no bias)
   const rawClockAmount = (state.clock.getElapsedTime() + state.periodOffset) / state.periodSeconds;
   const clockPercentage = rawClockAmount - Math.floor(rawClockAmount);
-  // const attractionRepulsionFactor = MathUtils.clamp(Math.sin(clockPercentage * 2 * Math.PI) + state.attractionRepulsionBias, -0.5, 0.5);
-  const attractionRepulsionFactor = MathUtils.smootherstep(clockPercentage, -1, 1);
+  const attractionRepulsionFactor = MathUtils.clamp(Math.sin(clockPercentage * 2 * Math.PI) + state.attractionRepulsionBias, -1, 1);
+  // const attractionRepulsionFactor = MathUtils.smootherstep(clockPercentage, -1, 1);
   // const attractionRepulsionFactor = 1;
 
   // Track the new center and velocity
