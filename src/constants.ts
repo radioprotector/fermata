@@ -8,7 +8,7 @@ export const OVERALL_XZ_RANGE = 100;
 /**
  * The Y range of the overall collection of clouds.
  */
-export const OVERALL_Y_RANGE = 5;
+export const OVERALL_Y_RANGE = 0.5;
 
 /**
  * The inner radius of the overall collection of clouds.

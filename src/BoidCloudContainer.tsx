@@ -13,9 +13,9 @@ export interface BoidCloudContainerProps {
 }
 
 const cloudsInnerBounds = new Vector3(
-  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE / 2.5),
-  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_Y_RANGE / 2.5),
-  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE / 2.5));
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE * 1.1),
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_Y_RANGE * 1.1),
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE * 1.1));
 
 function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
   // Create groups that contain BoidCloud elements, so we can individually control their position
@@ -84,20 +84,26 @@ useEffect(() => {
     initTransferObjects.push(groupPosition.buffer);
   }
 
-
   const initMessage: initMessageToWorker = {
     type: 'init',
     periodSeconds: cst.OVERALL_PERIOD_SECONDS,
     bounds: new Float32Array([cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, cst.OVERALL_XZ_RANGE]),
     innerBounds: new Float32Array([cloudsInnerBounds.x, cloudsInnerBounds.y, cloudsInnerBounds.z]),
     initialPositions: initPositions,
-    maximumVelocity: 0.0025,
-    attractionRepulsionBias: -0.5,
+    maximumVelocity: 0.005,
+    attractionRepulsionBias: 0,
     attractionRepulsionIntensity: 0.001,
-    revertIntensity: 0.0005,
+    revertIntensity: 0.001,
     distancingThreshold: 0.005,
-    matchingVelocityIntensity: -0.005,
-    boundingReturnIntensity: 0.125
+    matchingVelocityIntensity: 0.005,
+    boundingReturnIntensity: 0.1
+    // maximumVelocity: 0,
+    // attractionRepulsionBias: 0,
+    // attractionRepulsionIntensity: 0,
+    // revertIntensity: 0,
+    // distancingThreshold: 0,
+    // matchingVelocityIntensity: 0,
+    // boundingReturnIntensity: 0
   };
 
   groupsWorker.current.postMessage(initMessage, initTransferObjects);

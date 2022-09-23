@@ -79,12 +79,12 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       innerBounds: new Float32Array([0, 0, 0]),
       initialPositions: initPositions,
       maximumVelocity: 0.02,
-      attractionRepulsionBias: -0.9,
-      attractionRepulsionIntensity: 0.05,
-      revertIntensity: 0.005,
-      distancingThreshold: 0.05,
-      matchingVelocityIntensity: 0.01, // Should be less than the attraction/repulsion intensity
-      boundingReturnIntensity: 1
+      attractionRepulsionBias: 0,
+      attractionRepulsionIntensity: 0.00, // Move boids 1% towards the center of mass with each update
+      revertIntensity: 0,
+      distancingThreshold: 0.005,
+      matchingVelocityIntensity: 0.1, // Incorporate 10% of other boids' velocities into this
+      boundingReturnIntensity: 0.1
     };
 
     worker.current.postMessage(initMessage, initTransferObjects);
@@ -227,7 +227,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         &&
         <Text
           ref={debugTextRef}
-          visible={false}
+          visible={true}
           fontSize={4}
           color={0xffffff}
           anchorX="center"
@@ -241,7 +241,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         &&
         <axesHelper
           ref={axesHelperRef}
-          visible={false}
+          visible={true}
           />
       }
     </group>
