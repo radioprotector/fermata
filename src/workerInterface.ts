@@ -17,6 +17,11 @@ export interface initMessageToWorker {
   bounds: Float32Array;
 
   /**
+   * Describes the minimum bounds, to ensure that points are not within a certain range.
+   */
+  innerBounds: Float32Array;
+
+  /**
    * The maximum velocity to allow, as a 0.0-1.0 percentage of bounds.
    */
   maximumVelocity: number;

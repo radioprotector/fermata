@@ -76,6 +76,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       type: 'init',
       periodSeconds: props.periodSeconds,
       bounds: new Float32Array(props.bounds.toArray()),
+      innerBounds: new Float32Array([0, 0, 0]),
       initialPositions: initPositions,
       maximumVelocity: 0.02,
       attractionRepulsionBias: -0.9,

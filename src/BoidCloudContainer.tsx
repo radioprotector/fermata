@@ -1,6 +1,6 @@
-import {  useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Color, Group, MathUtils, Vector3 } from 'three';
+import { BoxGeometry, Color, Group, MathUtils, Vector3 } from 'three';
 
 import * as cst from './constants';
 
@@ -11,6 +11,11 @@ import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } fr
 export interface BoidCloudContainerProps {
   toneManager: ToneManager
 }
+
+const cloudsInnerBounds = new Vector3(
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE / 4),
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_Y_RANGE / 4),
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE / 4));
 
 function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
   // Create groups that contain BoidCloud elements, so we can individually control their position
@@ -38,9 +43,9 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
       </group>
     });
 
-// Track when we last updated the buffers
+// Track when we last updated the cloud positions
 const lastRenderTime = useRef(0);
-const FRAME_SECONDS = 1/30;  
+const FRAME_SECONDS = 1/30;
 
 // Create a web worker to handle the boid *group* processing
 const lastWorkerResult = useRef<resultMessageFromWorker | null>(null);
@@ -84,8 +89,9 @@ useEffect(() => {
     type: 'init',
     periodSeconds: cst.CLOUD_PERIOD_SECONDS[cst.CLOUD_PERIOD_SECONDS.length - 1],
     bounds: new Float32Array([cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, cst.OVERALL_XZ_RANGE]),
+    innerBounds: new Float32Array([cloudsInnerBounds.x, cloudsInnerBounds.y, cloudsInnerBounds.z]),
     initialPositions: initPositions,
-    maximumVelocity: 0.005,
+    maximumVelocity: 0.01,
     attractionRepulsionBias: -0.75,
     attractionRepulsionIntensity: 0.01,
     revertIntensity: 0.05,
@@ -143,6 +149,20 @@ useFrame((state) => {
   return (
     <group>
       {cloudContainerElements}
+      {
+        /* Only include cloud inner bounds in development */
+        process.env.NODE_ENV !== 'production'
+        &&
+        <lineSegments
+          visible={true}>
+          <wireframeGeometry args={[new BoxGeometry(cloudsInnerBounds.x * 2, cloudsInnerBounds.y * 2, cloudsInnerBounds.z * 2)]} />
+          <lineBasicMaterial
+            color={0xffffff}
+            depthTest={false}
+            transparent={true}
+          />
+        </lineSegments>
+      }
     </group>
   );
 }

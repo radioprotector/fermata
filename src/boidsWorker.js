@@ -26,6 +26,18 @@ const state = {
   bounds: null,
 
   /**
+   * The minimum bounds of the collection.
+   * @type {Vector3}
+   */
+  innerBounds: null,
+
+  /**
+   * If true, indicates that inner bounding is present for the collection.
+   * @type {Boolean}
+   */
+  hasInnerBounds: false,
+
+  /**
    * The upper clamp value to apply to the velocity.
    * @type {Vector3}
    */
@@ -117,8 +129,10 @@ fns.handleInit = function(data) {
   state.periodSeconds = data.periodSeconds;
   state.periodOffset = MathUtils.randFloat(0, state.periodSeconds);
 
-  // Copy over the bounds array
+  // Copy over the bounds arrays
   state.bounds = new Vector3(data.bounds[0], data.bounds[1], data.bounds[2]);
+  state.innerBounds = new Vector3(data.innerBounds[0], data.innerBounds[1], data.innerBounds[2]);
+  state.hasInnerBounds = (state.innerBounds.lengthSq() > 0);
 
   // Determine the distance threshold based on the bounds and threshold
   state.distancingLengthSquared = state.bounds.lengthSq() * data.distancingThreshold;
@@ -250,7 +264,7 @@ fns.getBoundsVector = function (boidIdx) {
   else if (currentPosition.x < -state.bounds.x) {
     returnVelocity.setX(state.bounds.x);
   }
-  
+
   // Snap y-values
   if (currentPosition.y > state.bounds.y) {
     returnVelocity.setY(-state.bounds.y);
@@ -265,6 +279,51 @@ fns.getBoundsVector = function (boidIdx) {
   }
   else if (currentPosition.z < -state.bounds.z) {
     returnVelocity.setZ(state.bounds.z);
+  }
+
+  // See if there are inner bounds to obey
+  if (state.hasInnerBounds && returnVelocity.lengthSq() === 0) {
+    let innerReturnX = 0;
+    let innerReturnY = 0;
+    let innerReturnZ = 0;
+
+    // Make sure we're within the range for the inner x-bound
+    if (currentPosition.x < state.innerBounds.x && currentPosition.x > -state.innerBounds.x) {
+      // Move away from zero - so positive values become more positive, negative values become more negative
+      if (currentPosition.x > 0) {
+        innerReturnX = state.innerBounds.x;
+      }
+      else {
+        innerReturnX = -state.innerBounds.x;
+      }
+    }
+
+    // Make sure we're within the range for the inner z-bound
+    if (currentPosition.y < state.innerBounds.y && currentPosition.y > -state.innerBounds.y) {
+      // Move away from zero - so positive values become more positive, negative values become more negative
+      if (currentPosition.y > 0) {
+        innerReturnY = state.innerBounds.y;
+      }
+      else {
+        innerReturnY = -state.innerBounds.y;
+      }
+    }
+
+    // Make sure we're within the range for the inner z-bound
+    if (currentPosition.z < state.innerBounds.z && currentPosition.z > -state.innerBounds.z) {
+      // Move away from zero - so positive values become more positive, negative values become more negative
+      if (currentPosition.z > 0) {
+        innerReturnZ = state.innerBounds.z;
+      }
+      else {
+        innerReturnZ = -state.innerBounds.z;
+      }
+    }
+
+    // If we have matches on ALL three inner return dimensions, apply the velocity
+    if (innerReturnX !== 0 && innerReturnY !== 0 && innerReturnZ !== 0) {
+      returnVelocity.set(innerReturnX, innerReturnY, innerReturnZ);
+    }
   }
 
   return returnVelocity.multiplyScalar(state.boundingReturnIntensity);

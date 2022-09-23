@@ -14,7 +14,7 @@ export const OVERALL_Y_RANGE = 5;
  * The inner radius of the overall collection of clouds.
  * Used to further spread out the collection from the center without impacting the bounds.
  */
-export const OVERALL_XZ_INNER_RADIUS = 5;
+export const OVERALL_XZ_INNER_RADIUS = 9;
 
 /**
  * The X/Z range of each individual boid cloud.
