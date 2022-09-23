@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import * as Tone from 'tone';
+// Import globals with specific aliases to avoid https://github.com/Tonejs/Tone.js/issues/1102
+import { start as toneStart } from 'tone';
+
 import ToneManager from './ToneManager';
 
 import './InterfaceControls.css';
@@ -16,7 +18,7 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
   const toggleAudioClickHandler = async () => {
     if (!audioPlaying) {
       // Unfortunately, this *has* to be in this event handler to prevent auto-play blocking
-      await Tone.start();
+      await toneStart();
 
       setAudioPlaying(true);
       props.toneManager.startPlayback();
