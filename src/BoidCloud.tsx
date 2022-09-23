@@ -228,7 +228,6 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         <Text
           ref={debugTextRef}
           visible={false}
-          font="sans-serif"
           fontSize={4}
           color={0xffffff}
           anchorX="center"
