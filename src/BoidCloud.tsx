@@ -56,17 +56,27 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
     // Initialize the worker state
     const initPositions: Float32Array[] = [];
     const initTransferObjects = [];
-    const degOffset = MathUtils.randInt(0, 359);
-    const minXDispersal = props.bounds.x * 0.4;
-    const minZDispersal = props.bounds.z * 0.4;
+    const dummyVector = new Vector3();
+    // const degOffset = MathUtils.randInt(0, 359);
+    // const minXDispersal = props.bounds.x * 0.4;
+    // const minZDispersal = props.bounds.z * 0.4;
 
     for(let boidIdx = 0; boidIdx < props.cloudSize; boidIdx++) {
-      // Generate a position for the boid. Arrange them circularly around the y-axis, arranging from top-to-bottom
       const boidPosition = new Float32Array(3);
-      const boidRad = MathUtils.degToRad((boidIdx * 30) + degOffset );
-      boidPosition[0] = minXDispersal + MathUtils.randFloatSpread((props.bounds.x / 1.5) * Math.cos(boidRad));
-      boidPosition[1] = MathUtils.mapLinear(boidIdx, 0, props.cloudSize, -props.bounds.y, props.bounds.y);
-      boidPosition[2] = minZDispersal + MathUtils.randFloatSpread((props.bounds.z / 1.5) * Math.sin(boidRad));
+
+      // Randomize the vector
+      dummyVector.randomDirection();
+      dummyVector.setX(dummyVector.x * (props.bounds.x / 1.5));
+      dummyVector.setY(dummyVector.y * (props.bounds.y / 1.5));
+      dummyVector.setZ(dummyVector.z * (props.bounds.z / 1.5));
+      boidPosition[0] = dummyVector.x;
+      boidPosition[1] = dummyVector.y;
+      boidPosition[2] = dummyVector.z;
+
+      // const boidRad = MathUtils.degToRad((boidIdx * 30) + degOffset);
+      // boidPosition[0] = Math.cos(boidRad) * (minXDispersal + MathUtils.randFloat(0, props.bounds.x * 0.2));
+      // boidPosition[1] = MathUtils.mapLinear(boidIdx, 0, props.cloudSize, -props.bounds.y, props.bounds.y);
+      // boidPosition[2] = Math.sin(boidRad) * (minZDispersal + MathUtils.randFloat(0, props.bounds.z * 0.2));
 
       initPositions.push(boidPosition);
       initTransferObjects.push(boidPosition.buffer);
@@ -80,7 +90,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       initialPositions: initPositions,
       maximumVelocity: 0.02,
       attractionRepulsionBias: 0,
-      attractionRepulsionIntensity: 0.00, // Move boids 1% towards the center of mass with each update
+      attractionRepulsionIntensity: 0.005, // Move boids 0.5% towards the center of mass with each update
       revertIntensity: 0,
       distancingThreshold: 0.005,
       matchingVelocityIntensity: 0.1, // Incorporate 10% of other boids' velocities into this

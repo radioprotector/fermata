@@ -13,9 +13,9 @@ export interface BoidCloudContainerProps {
 }
 
 const cloudsInnerBounds = new Vector3(
-  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE * 1.1),
-  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_Y_RANGE * 1.1),
-  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE * 1.1));
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE),
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_Y_RANGE),
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE));
 
 function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
   // Create groups that contain BoidCloud elements, so we can individually control their position
@@ -90,7 +90,7 @@ useEffect(() => {
     bounds: new Float32Array([cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, cst.OVERALL_XZ_RANGE]),
     innerBounds: new Float32Array([cloudsInnerBounds.x, cloudsInnerBounds.y, cloudsInnerBounds.z]),
     initialPositions: initPositions,
-    maximumVelocity: 0.005,
+    maximumVelocity: 0.0025,
     attractionRepulsionBias: 0,
     attractionRepulsionIntensity: 0.001,
     revertIntensity: 0.001,
