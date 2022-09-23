@@ -57,7 +57,7 @@ function App(): JSX.Element {
             */}
             {((tex: Texture) => (
               <mesh>
-                <sphereGeometry args={[10, 64, 64]} />
+                <sphereGeometry args={[cst.OVERALL_XZ_INNER_RADIUS * 2, 64, 64]} />
                 <meshStandardMaterial
                   emissive={0xffffff}
                   emissiveIntensity={0.01}
