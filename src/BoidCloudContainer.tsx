@@ -13,9 +13,9 @@ export interface BoidCloudContainerProps {
 }
 
 const cloudsInnerBounds = new Vector3(
-  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE / 4),
-  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_Y_RANGE / 4),
-  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE / 4));
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE / 2.5),
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_Y_RANGE / 2.5),
+  cst.OVERALL_XZ_INNER_RADIUS + (cst.CLOUD_XZ_RANGE / 2.5));
 
 function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
   // Create groups that contain BoidCloud elements, so we can individually control their position
@@ -84,20 +84,20 @@ useEffect(() => {
     initTransferObjects.push(groupPosition.buffer);
   }
 
-  // Unlike the individual clouds, we want to use a very slow position, don't shift the y-axis, and use more of a reversion factor
+
   const initMessage: initMessageToWorker = {
     type: 'init',
-    periodSeconds: cst.CLOUD_PERIOD_SECONDS[cst.CLOUD_PERIOD_SECONDS.length - 1],
+    periodSeconds: cst.OVERALL_PERIOD_SECONDS,
     bounds: new Float32Array([cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, cst.OVERALL_XZ_RANGE]),
     innerBounds: new Float32Array([cloudsInnerBounds.x, cloudsInnerBounds.y, cloudsInnerBounds.z]),
     initialPositions: initPositions,
-    maximumVelocity: 0.01,
-    attractionRepulsionBias: -0.75,
-    attractionRepulsionIntensity: 0.01,
-    revertIntensity: 0.05,
-    distancingThreshold: 0.2,
-    matchingVelocityIntensity: 0.0,
-    boundingReturnIntensity: 0.25
+    maximumVelocity: 0.0025,
+    attractionRepulsionBias: -0.5,
+    attractionRepulsionIntensity: 0.001,
+    revertIntensity: 0.0005,
+    distancingThreshold: 0.005,
+    matchingVelocityIntensity: -0.005,
+    boundingReturnIntensity: 0.125
   };
 
   groupsWorker.current.postMessage(initMessage, initTransferObjects);
@@ -154,11 +154,12 @@ useFrame((state) => {
         process.env.NODE_ENV !== 'production'
         &&
         <lineSegments
-          visible={true}>
+          visible={false}>
           <wireframeGeometry args={[new BoxGeometry(cloudsInnerBounds.x * 2, cloudsInnerBounds.y * 2, cloudsInnerBounds.z * 2)]} />
           <lineBasicMaterial
             color={0xffffff}
             depthTest={false}
+            depthWrite={false}
             transparent={true}
           />
         </lineSegments>

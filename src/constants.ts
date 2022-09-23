@@ -3,7 +3,7 @@ import { Note } from 'tone/build/esm/core/type/NoteUnits';
 /**
  * The X/Z range of the overall collection of clouds.
  */
-export const OVERALL_XZ_RANGE = 80;
+export const OVERALL_XZ_RANGE = 100;
 
 /**
  * The Y range of the overall collection of clouds.
@@ -42,6 +42,11 @@ export const CLOUD_POINT_SIZE = 40;
  */
 // export const CLOUD_PERIOD_SECONDS: number[] = [3, 5, 8, 13, 21, 34, 55, 89, 144];
 export const CLOUD_PERIOD_SECONDS: number[] = [11, 13, 17, 23, 29, 31, 37];
+
+/**
+ * The oscillation period for the overall cloud, in seconds.
+ */
+export const OVERALL_PERIOD_SECONDS: number = 89;
 
 /**
  * Maps individual boid cloud indices to their base notes.
