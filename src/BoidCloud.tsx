@@ -155,12 +155,12 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
 
           props.audioChain.crossFade.fade.rampTo(MathUtils.clamp(1 - deviationPercentage, 0, 1), MUSIC_SECONDS);
 
-          // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the effect.
-          const dispersalPercentage = (Math.abs(cloudStdevX / props.bounds.x) +
-            Math.abs(cloudStdevY / props.bounds.y) +
-            Math.abs(cloudStdevZ / props.bounds.z)) / 3;
+          // // The higher the standard deviation is, the more "dispersal" we have, which increases the intensity of the effect.
+          // const dispersalPercentage = (Math.abs(cloudStdevX / props.bounds.x) +
+          //   Math.abs(cloudStdevY / props.bounds.y) +
+          //   Math.abs(cloudStdevZ / props.bounds.z)) / 3;
 
-          props.audioChain.effect.wet.rampTo(MathUtils.clamp(dispersalPercentage, 0, 1), MUSIC_SECONDS);
+          // props.audioChain.effect.wet.rampTo(MathUtils.clamp(dispersalPercentage, 0, 1), MUSIC_SECONDS);
 
           // Indicate when the music was updated
           lastMusicTime.current = state.clock.elapsedTime;

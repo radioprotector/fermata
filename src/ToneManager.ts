@@ -1,11 +1,11 @@
-import { Frequency, ToneAudioNode, ToneAudioNodeOptions, AMSynth, PolySynth, Sampler, Volume, Gain, BitCrusher, CrossFade, Loop, Pattern, Sequence } from 'tone';
+import { Frequency, ToneAudioNode, ToneAudioNodeOptions, AMSynth, PolySynth, Sampler, Volume, Gain, BitCrusher, CrossFade, Loop, Pattern, Sequence, Context } from 'tone';
 
 // Import globals with specific aliases to avoid https://github.com/Tonejs/Tone.js/issues/1102
-import { loaded as toneLoaded, getDestination as toneGetDestination, getTransport as toneGetTransport } from 'tone';
+import { loaded as toneLoaded, getDestination as toneGetDestination, getTransport as toneGetTransport, setContext as toneSetContext } from 'tone';
 import { Frequency as FrequencyUnit } from 'tone/build/esm/core/type/Units';
 import { Note } from 'tone/build/esm/core/type/NoteUnits';
-import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect';
-import { StereoEffect, StereoEffectOptions } from 'tone/build/esm/effect/StereoEffect';
+// import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect';
+// import { StereoEffect, StereoEffectOptions } from 'tone/build/esm/effect/StereoEffect';
 import { Instrument, InstrumentOptions } from 'tone/build/esm/instrument/Instrument';
 
 import * as cst from './constants';
@@ -84,13 +84,13 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
   // const tremolo = new Tone.Tremolo((cloudIdx * 0.5) + 1, 0.75);
   // tremolo.wet.value = 0;
   // tremolo.connect(volume);
-  const bitCrush = new BitCrusher(2 + (2 * cloudIdx));
-  bitCrush.wet.value = 0;
-  bitCrush.connect(volume);
+  // const bitCrush = new BitCrusher(2 + (2 * cloudIdx));
+  // bitCrush.wet.value = 0;
+  // bitCrush.connect(volume);
 
   // Create a cross-fade for the chord and polysynth
   const crossFade = new CrossFade(0);
-  crossFade.connect(bitCrush);
+  crossFade.connect(volume);
 
   // Create a base instrument
   const baseInstrument = new AMSynth();
@@ -107,7 +107,7 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
     chordFrequencies,
     chordInstrument,
     crossFade,
-    effect: bitCrush,
+    // effect: bitCrush,
     volume
   };
 }
@@ -135,7 +135,7 @@ export interface CloudAudioChain {
   /**
    * The effect to apply to the cloud, in which its wetness is variable based on cloud dispersal.
    */
-  effect: Effect<EffectOptions> | StereoEffect<StereoEffectOptions>;
+  // effect: Effect<EffectOptions> | StereoEffect<StereoEffectOptions>;
 
   volume: Volume;
 }
@@ -153,6 +153,8 @@ class ToneManager {
   }
 
   constructor() {
+    toneSetContext(new Context({ latencyHint : 'playback' }));
+
     // Create a gain node to receive all of the instruments
     this.chainReceiverNode = new Gain();
 
@@ -201,7 +203,7 @@ class ToneManager {
   public startPlayback = async (): Promise<void> => {
     // Ensure patterns are good to go
     await this.registerPatterns(false);
-
+    
     toneGetDestination().mute = false;
 
     const toneTransport = toneGetTransport();
