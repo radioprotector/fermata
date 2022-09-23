@@ -86,13 +86,16 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
   // const reverb = new Tone.Reverb((cloudIdx + 1) * 0.5);
   // reverb.wet.value = 0;
   // reverb.connect(volume);
-  const tremolo = new Tone.Tremolo((cloudIdx * 0.5) + 1, 0.75);
-  tremolo.wet.value = 0;
-  tremolo.connect(volume);
+  // const tremolo = new Tone.Tremolo((cloudIdx * 0.5) + 1, 0.75);
+  // tremolo.wet.value = 0;
+  // tremolo.connect(volume);
+  const bitCrush = new Tone.BitCrusher(2 + (2 * cloudIdx));
+  bitCrush.wet.value = 0;
+  bitCrush.connect(volume);
 
   // Create a cross-fade for the chord and polysynth
   const crossFade = new Tone.CrossFade(0);
-  crossFade.connect(tremolo);
+  crossFade.connect(bitCrush);
 
   // Create a base instrument
   const baseInstrument = new Tone.AMSynth();
@@ -109,7 +112,7 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
     chordFrequencies,
     chordInstrument,
     crossFade,
-    effect: tremolo,
+    effect: bitCrush,
     volume
   };
 }
