@@ -169,15 +169,15 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         // Update debug contents if we have them
         if (process.env.NODE_ENV !== 'production') {
           // Update debug text
-          if (debugTextRef.current !== null) {
-            // HACK: Work around typing problem with drei's Text component 
+          // HACK: Work around typing problems with drei's Text component 
+          if (debugTextRef.current !== null && (debugTextRef.current as any).visible) {
             (debugTextRef.current as any).text = `µ: (${cloudMeanX.toFixed(1)}, ${cloudMeanY.toFixed(1)}, ${cloudMeanZ.toFixed(1)})\n` +
               `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)})\n` +
               `o: ${(lastWorkerResult.current.clockPercentage * 100).toFixed(0)} % (${lastWorkerResult.current.attractionRepulsionFactor.toFixed(1)})`;
           }
           
           // Orient the axes helper on the center of the boids and scale it by the stdev for each of the different axes
-          if (axesHelperRef.current !== null) {
+          if (axesHelperRef.current !== null && axesHelperRef.current.visible) {
             axesHelperRef.current.position.set(cloudMeanX, cloudMeanY, cloudMeanZ);
             axesHelperRef.current.scale.set(cloudStdevX, cloudStdevY, cloudStdevZ);
           }
