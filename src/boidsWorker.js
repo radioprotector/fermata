@@ -1,3 +1,4 @@
+/* eslint no-restricted-globals: 1 */
 import { Clock, Vector3, MathUtils } from "three";
 
 const state = {
@@ -466,10 +467,10 @@ fns.getBoundsVector = function (boidIdx) {
   ];
 
   // Post the message
-  postMessage(message, transferObjects);
+  self.postMessage(message, transferObjects);
 };
 
-onmessage = function(e) {
+self.onmessage = function(e) {
   switch(e.data.type) {
     case 'init':
       fns.handleInit(e.data);
