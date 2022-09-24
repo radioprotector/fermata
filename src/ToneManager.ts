@@ -75,7 +75,7 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
   const chordFrequencies = Frequency(baseNote).harmonize([0, 4, 7]).map((fc) => fc.toFrequency());
 
   // Create a volume node and connect it to the main destination
-  const volume = new Volume(-25);
+  const volume = new Volume(-30);
   volume.connect(destinationNode);
 
   // // Create a reverb node and connect it to the volume output

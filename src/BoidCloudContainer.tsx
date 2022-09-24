@@ -12,6 +12,11 @@ export interface BoidCloudContainerProps {
   toneManager: ToneManager
 }
 
+/**
+ * The radius used to distribute each of the different boid clouds around the center.
+ */
+const cloudDistributionRadius = cst.OVERALL_XZ_RANGE + cst.OVERALL_XZ_INNER_RADIUS;
+
 const cloudsInnerBounds = new Vector3(
   (cst.OVERALL_XZ_INNER_RADIUS * 1.25) + (cst.CLOUD_XZ_RANGE),
   (cst.OVERALL_XZ_INNER_RADIUS * 1.25) + (cst.CLOUD_Y_RANGE),
@@ -26,12 +31,11 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
       cloudBaseColor.setHSL(cloudIndex / cst.CLOUD_COUNT, 0.6, 0.3);
 
       const cloudRad = MathUtils.degToRad(MathUtils.mapLinear(cloudIndex, 0, cst.CLOUD_COUNT, 0, 360));
-      const distributionRadius = cst.OVERALL_XZ_RANGE + cst.OVERALL_XZ_INNER_RADIUS;
 
       return <group
         key={cloudIndex}
         ref={(grp: Group) => cloudGroups.current[cloudIndex] = grp}
-        position={[Math.cos(cloudRad) * distributionRadius, cst.OVERALL_Y_RANGE, Math.sin(cloudRad) * distributionRadius]}
+        position={[Math.cos(cloudRad) * cloudDistributionRadius, cst.OVERALL_Y_RANGE, Math.sin(cloudRad) * cloudDistributionRadius]}
       >
         <BoidCloud
           cloudSize={cst.CLOUD_POINT_SIZE}
@@ -43,9 +47,11 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
       </group>
     });
 
-// Track when we last updated the cloud positions
+// Track when we last updated the cloud positions/music
 const lastRenderTime = useRef(0);
+const lastMusicTime = useRef(0);
 const FRAME_SECONDS = 1/30;
+const MUSIC_SECONDS = 1/10;
 
 // Create a web worker to handle the boid *group* processing
 const lastWorkerResult = useRef<resultMessageFromWorker | null>(null);
@@ -137,6 +143,24 @@ useFrame((state) => {
         const newPosition = lastWorkerResult.current.positions[boidGroupIdx];
 
         groupObject.position.set(newPosition[0], newPosition[1], newPosition[2]);
+      }
+
+      if (props.toneManager !== null && props.toneManager.cloudChains.length > 0 && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
+        // As individual clouds get closer to the center (i.e. have a shorter position vector length), increase the volume
+        const farVolumeDb = -60;
+        const closeVolumeDb = -18;
+        const farVolumeRadiusSq = Math.pow(cloudDistributionRadius * 1.25, 2);
+        const closeVolumeRadiusSq = Math.pow(cloudDistributionRadius * 0.75, 2);
+
+        for(let boidGroupIdx = 0; boidGroupIdx < cst.CLOUD_COUNT; boidGroupIdx++) {
+          const groupObject = cloudGroups.current[boidGroupIdx];
+          const cloudVolumeRadiusSq = MathUtils.clamp(groupObject.position.lengthSq(), closeVolumeRadiusSq, farVolumeRadiusSq);
+          
+          props.toneManager.cloudChains[boidGroupIdx].volume.volume.value = MathUtils.mapLinear(cloudVolumeRadiusSq, farVolumeRadiusSq, closeVolumeRadiusSq, farVolumeDb, closeVolumeDb);
+        }
+
+        // Indicate when the music was updated
+        lastMusicTime.current = state.clock.elapsedTime;
       }
 
       // Clear the last worker result
