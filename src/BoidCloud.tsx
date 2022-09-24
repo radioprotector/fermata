@@ -6,6 +6,9 @@ import { Text } from "@react-three/drei";
 import { CloudAudioChain } from "./ToneManager";
 import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from "./workerInterface";
 
+/**
+ * The properties required by a {@see BoidCloud}.
+ */
 export interface BoidCloudProps {
   cloudSize: number;
 
@@ -180,10 +183,16 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           // Update debug text
           // HACK: Work around typing problems with drei's Text component 
           if (debugTextRef.current !== null && (debugTextRef.current as any).visible) {
-            (debugTextRef.current as any).text = `${props.audioChain.baseNote} ${props.audioChain.waveformType} ${props.audioChain.volume.volume.value.toFixed(0)}dB\n` + 
-              `µ: (${cloudMeanX.toFixed(1)}, ${cloudMeanY.toFixed(1)}, ${cloudMeanZ.toFixed(1)}) - ${(props.audioChain.crossFade.fade.value * 100).toFixed(0)}% chord\n` +
-              `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)}) - ${(props.audioChain.effect.wet.value * 100).toFixed(0)}% fx\n` +
-              `o: ${(lastWorkerResult.current.clockPercentage * 100).toFixed(0)} % (${lastWorkerResult.current.attractionRepulsionFactor.toFixed(1)})`;
+            const volumeDbStr = props.audioChain.volume.volume.value.toFixed(0);
+            const chordPercentageStr = (props.audioChain.crossFade.fade.value * 100).toFixed(0);
+            const fxPercentageStr = (props.audioChain.effect.wet.value * 100).toFixed(0);
+            const clockPercentageStr = (lastWorkerResult.current.clockPercentage * 100).toFixed(0);
+            const attractionRepulsionStr = lastWorkerResult.current.attractionRepulsionFactor.toFixed(1);
+
+            (debugTextRef.current as any).text = `${props.audioChain.baseNote} ${props.audioChain.waveformType} ${volumeDbStr}dB\n` + 
+              `µ: (${cloudMeanX.toFixed(1)}, ${cloudMeanY.toFixed(1)}, ${cloudMeanZ.toFixed(1)}) - ${chordPercentageStr}% chord\n` +
+              `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)}) - ${fxPercentageStr}% fx\n` +
+              `c: ${attractionRepulsionStr} - ${clockPercentageStr}% clock`;
           }
           
           // Orient the axes helper on the center of the boids and scale it by the stdev for each of the different axes

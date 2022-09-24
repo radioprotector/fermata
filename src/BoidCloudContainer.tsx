@@ -8,6 +8,9 @@ import ToneManager from './ToneManager';
 import BoidCloud from './BoidCloud';
 import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from './workerInterface';
 
+/**
+ * The properties required by a {@see BoidCloudContainer}.
+ */
 export interface BoidCloudContainerProps {
   toneManager: ToneManager
 }
