@@ -1,4 +1,5 @@
 import { Note } from 'tone/build/esm/core/type/NoteUnits';
+import { NonCustomOscillatorType } from 'tone/build/esm/source/oscillator/OscillatorInterface';
 
 /**
  * The X/Z range of the overall collection of clouds.
@@ -53,3 +54,9 @@ export const OVERALL_PERIOD_SECONDS: number = 89;
  * Will contain at least as many elements as {@see CLOUD_COUNT}.
  */
 export const CLOUD_BASE_NOTES: Note[] = ['G5', 'C4', 'G3', 'C2', 'C1', 'C0'];
+
+/**
+ * Maps individual boid cloud indices to their underlying instruments.
+ * Will contain at least as many elements as {@see CLOUD_COUNT}.
+ */
+export const CLOUD_OSCILLATORS: NonCustomOscillatorType[] = ['sine', 'triangle', 'sawtooth', 'sine', 'sawtooth', 'triangle'];

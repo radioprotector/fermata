@@ -97,7 +97,7 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
   const synthOptions: RecursivePartial<SynthOptions> = {
     oscillator: {
       partialCount: 1,
-      type: 'sine'
+      type: cst.CLOUD_OSCILLATORS[cloudIdx]
     },
     envelope: {
       attack: periodSeconds / 20
