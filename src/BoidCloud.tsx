@@ -122,10 +122,15 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         const cloudStdevY = lastWorkerResult.current.stdevs[1];
         const cloudStdevZ = lastWorkerResult.current.stdevs[2];
 
+        const rotationClockPercentage = state.clock.getElapsedTime() / (0.5 * props.periodSeconds);
+        const rotationClockAmount1 = Math.cos(rotationClockPercentage * 2 * Math.PI);
+        const rotationClockAmount2 = Math.sin(rotationClockPercentage * 2 * Math.PI);
+
         // Update positions on all of the boids
         for(let boidIdx = 0; boidIdx < props.cloudSize; boidIdx++) {
           const boidPosition = lastWorkerResult.current.positions[boidIdx];
           dummyObject.position.set(boidPosition[0], boidPosition[1], boidPosition[2]);
+          dummyObject.rotation.set(0, rotationClockAmount1 - boidIdx, rotationClockAmount2 + boidIdx);
 
           dummyObject.updateMatrix();
           
