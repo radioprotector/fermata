@@ -53,7 +53,7 @@ export const OVERALL_PERIOD_SECONDS: number = 89;
  * Maps individual boid cloud indices to their base notes.
  * Will contain at least as many elements as {@see CLOUD_COUNT}.
  */
-export const CLOUD_BASE_NOTES: Note[] = ['G5', 'C4', 'G3', 'C2', 'C1', 'C0'];
+export const CLOUD_BASE_NOTES: Note[] = ['C5', 'G5', 'C4', 'G3', 'C2', 'C1'];
 
 /**
  * Maps individual boid cloud indices to their underlying instruments.

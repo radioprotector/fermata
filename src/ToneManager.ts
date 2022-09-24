@@ -1,12 +1,12 @@
-import { Frequency, ToneAudioNode, ToneAudioNodeOptions, Synth, PolySynth, SynthOptions, Volume, Gain, CrossFade, Loop, Context } from 'tone';
+import { Frequency, ToneAudioNode, ToneAudioNodeOptions, Synth, PolySynth, SynthOptions, Volume, Gain, CrossFade, Tremolo, Loop, Context } from 'tone';
 
 // Import globals with specific aliases to avoid https://github.com/Tonejs/Tone.js/issues/1102
 import { loaded as toneLoaded, getDestination as toneGetDestination, getTransport as toneGetTransport, setContext as toneSetContext } from 'tone';
 import { RecursivePartial } from 'tone/build/esm/core/util/Interface';
 import { Instrument, InstrumentOptions } from 'tone/build/esm/instrument/Instrument';
 import { Frequency as FrequencyUnit } from 'tone/build/esm/core/type/Units';
-// import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect';
-// import { StereoEffect, StereoEffectOptions } from 'tone/build/esm/effect/StereoEffect';
+import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect';
+import { StereoEffect, StereoEffectOptions } from 'tone/build/esm/effect/StereoEffect';
 
 import * as cst from './constants';
 
@@ -19,23 +19,17 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
   const chordFrequencies = Frequency(baseNote).harmonize([0, 4, 7]).map((fc) => fc.toFrequency());
 
   // Create a volume node and connect it to the main destination
-  const volume = new Volume(-30);
+  const volume = new Volume(-40);
   volume.connect(destinationNode);
 
   // // Create a reverb node and connect it to the volume output
-  // const reverb = new Tone.Reverb((cloudIdx + 1) * 0.5);
-  // reverb.wet.value = 0;
-  // reverb.connect(volume);
-  // const tremolo = new Tone.Tremolo((cloudIdx * 0.5) + 1, 0.75);
-  // tremolo.wet.value = 0;
-  // tremolo.connect(volume);
-  // const bitCrush = new BitCrusher(2 + (2 * cloudIdx));
-  // bitCrush.wet.value = 0;
-  // bitCrush.connect(volume);
+  const tremolo = new Tremolo((cloudIdx * 0.5) + 1, 1);
+  tremolo.wet.value = 0;
+  tremolo.connect(volume);
 
   // Create a cross-fade for the chord and polysynth
   const crossFade = new CrossFade(0);
-  crossFade.connect(volume);
+  crossFade.connect(tremolo);
 
   // Determine synth args
   const synthOptions: RecursivePartial<SynthOptions> = {
@@ -58,12 +52,13 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
 
   return {
     periodSeconds,
+    waveformType: synthOptions.oscillator?.type || '',
     baseNote,
     baseInstrument,
     chordFrequencies,
     chordInstrument,
     crossFade,
-    // effect: bitCrush,
+    effect: tremolo,
     volume
   };
 }
@@ -73,6 +68,8 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
  */
 export interface CloudAudioChain {
   periodSeconds: number;
+
+  waveformType: string;
 
   baseNote: FrequencyUnit;
 
@@ -87,7 +84,7 @@ export interface CloudAudioChain {
   /**
    * The effect to apply to the cloud, in which its wetness is variable based on cloud dispersal.
    */
-  // effect: Effect<EffectOptions> | StereoEffect<StereoEffectOptions>;
+  effect: Effect<EffectOptions> | StereoEffect<StereoEffectOptions>;
 
   volume: Volume;
 }

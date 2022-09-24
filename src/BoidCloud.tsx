@@ -158,15 +158,18 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         // Update the cloud audio chain if we have one
         if (props.audioChain != null && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
           // The closer the mean values are to 0, the more "accuracy" we have, which increases the prominence of the chords (the second input in the crossfade)
-          const deviationPercentage = ((cloudMeanX / props.bounds.x) + (cloudMeanY / props.bounds.y) + (cloudMeanZ / props.bounds.z)) / 6;
+          const deviationPercentage =  (MathUtils.mapLinear(Math.abs(cloudMeanX), 0, props.bounds.x / 2, 0, 1) +
+            MathUtils.mapLinear(Math.abs(cloudMeanY), 0, props.bounds.y / 2, 0, 1) +
+            MathUtils.mapLinear(Math.abs(cloudMeanZ), 0, props.bounds.z / 2, 0, 1)) / 3;
 
           props.audioChain.crossFade.fade.value = MathUtils.clamp(1 - deviationPercentage, 0, 1);
 
           // // The higher the standard deviation is, the more "dispersal" we have, which impacts the intensity of the effect.
-          // const dispersalPercentage = (Math.abs(cloudStdevX / props.bounds.x) +
-          //   Math.abs(cloudStdevY / props.bounds.y) +
-          //   Math.abs(cloudStdevZ / props.bounds.z)) / 3;
-          // props.audioChain.effect.wet.rampTo(MathUtils.clamp(dispersalPercentage, 0, 1), MUSIC_SECONDS);
+          const dispersalPercentage = (MathUtils.mapLinear(cloudStdevX, 0, props.bounds.x, 0, 1) +
+            MathUtils.mapLinear(cloudStdevY, 0, props.bounds.y, 0, 1) +
+            MathUtils.mapLinear(cloudStdevZ, 0, props.bounds.z, 0, 1)) / 3;
+
+          props.audioChain.effect.wet.value = MathUtils.clamp(1 - dispersalPercentage, 0, 1);
 
           // Indicate when the music was updated
           lastMusicTime.current = state.clock.elapsedTime;
@@ -177,8 +180,9 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           // Update debug text
           // HACK: Work around typing problems with drei's Text component 
           if (debugTextRef.current !== null && (debugTextRef.current as any).visible) {
-            (debugTextRef.current as any).text = `µ: (${cloudMeanX.toFixed(1)}, ${cloudMeanY.toFixed(1)}, ${cloudMeanZ.toFixed(1)})\n` +
-              `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)})\n` +
+            (debugTextRef.current as any).text = `${props.audioChain.baseNote} ${props.audioChain.waveformType} ${props.audioChain.volume.volume.value.toFixed(0)}dB\n` + 
+              `µ: (${cloudMeanX.toFixed(1)}, ${cloudMeanY.toFixed(1)}, ${cloudMeanZ.toFixed(1)}) - ${(props.audioChain.crossFade.fade.value * 100).toFixed(0)}% chord\n` +
+              `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)}) - ${(props.audioChain.effect.wet.value * 100).toFixed(0)}% fx\n` +
               `o: ${(lastWorkerResult.current.clockPercentage * 100).toFixed(0)} % (${lastWorkerResult.current.attractionRepulsionFactor.toFixed(1)})`;
           }
           
