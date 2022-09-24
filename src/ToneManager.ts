@@ -1,12 +1,13 @@
-import { Frequency, ToneAudioNode, ToneAudioNodeOptions, AMSynth, PolySynth, Sampler, Volume, Gain, BitCrusher, CrossFade, Loop, Pattern, Sequence, Context } from 'tone';
+import { Frequency, ToneAudioNode, ToneAudioNodeOptions, Synth, PolySynth, SynthOptions, Sampler, Volume, Gain, CrossFade, Loop, Pattern, Sequence, Context } from 'tone';
 
 // Import globals with specific aliases to avoid https://github.com/Tonejs/Tone.js/issues/1102
 import { loaded as toneLoaded, getDestination as toneGetDestination, getTransport as toneGetTransport, setContext as toneSetContext } from 'tone';
+import { RecursivePartial } from 'tone/build/esm/core/util/Interface';
+import { Instrument, InstrumentOptions } from 'tone/build/esm/instrument/Instrument';
 import { Frequency as FrequencyUnit } from 'tone/build/esm/core/type/Units';
 import { Note } from 'tone/build/esm/core/type/NoteUnits';
 // import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect';
 // import { StereoEffect, StereoEffectOptions } from 'tone/build/esm/effect/StereoEffect';
-import { Instrument, InstrumentOptions } from 'tone/build/esm/instrument/Instrument';
 
 import * as cst from './constants';
 
@@ -92,12 +93,23 @@ function buildCloudChain(cloudIdx: number, destinationNode: ToneAudioNode<ToneAu
   const crossFade = new CrossFade(0);
   crossFade.connect(volume);
 
+  // Determine synth args
+  const synthOptions: RecursivePartial<SynthOptions> = {
+    oscillator: {
+      partialCount: 1,
+      type: 'sine'
+    },
+    envelope: {
+      attack: periodSeconds / 20
+    }
+  }
+
   // Create a base instrument
-  const baseInstrument = new AMSynth();
+  const baseInstrument = new Synth(synthOptions);
   baseInstrument.connect(crossFade.a);
 
   // Create a polysynth for the chord
-  const chordInstrument = new PolySynth(AMSynth);
+  const chordInstrument = new PolySynth({ maxPolyphony: chordFrequencies.length * 2, voice: Synth, options: synthOptions });
   chordInstrument.connect(crossFade.b);
 
   return {
@@ -174,8 +186,8 @@ class ToneManager {
       .then(() => {
         for(const cloudChain of this.cloudChains) {
           new Loop(() => {
-            cloudChain.baseInstrument.triggerAttack(cloudChain.baseNote);
-            cloudChain.chordInstrument.triggerAttack(cloudChain.chordFrequencies);
+            cloudChain.baseInstrument.triggerAttackRelease(cloudChain.baseNote, cloudChain.periodSeconds * 1.05);
+            cloudChain.chordInstrument.triggerAttackRelease(cloudChain.chordFrequencies, cloudChain.periodSeconds * 1.05);
           }, cloudChain.periodSeconds).start(0);
         }
 
