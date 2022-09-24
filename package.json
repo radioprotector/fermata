@@ -1,6 +1,7 @@
 {
   "name": "fermata",
   "version": "0.1.0",
+  "homepage": "https://radioprotector.github.io/fermata",
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.2.0",
@@ -21,7 +22,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-scripts build && node craBugWorkaround.js",
+    "start:prod": "env-cmd -f .env.prodlocal react-scripts build && node craBugWorkaround.js && npx serve -s build -l 4000 -n",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -31,7 +33,9 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
+      ">1%",
+      "supports webgl2",
+      "supports audio-api",
       "not dead",
       "not op_mini all"
     ],
@@ -43,6 +47,7 @@
   },
   "devDependencies": {
     "@types/three": "^0.144.0",
+    "env-cmd": "^10.1.0",
     "typescript": "4.8"
   }
 }
