@@ -34,7 +34,7 @@ export const CLOUD_COUNT = 6;
 /**
  * The number of points in each cloud.
  */
-export const CLOUD_POINT_SIZE = 40;
+export const CLOUD_POINT_SIZE = 100;
 
 /**
  * Maps individual boid cloud indices to their oscillation period, in seconds.
