@@ -1,4 +1,4 @@
-import { Frequency, ToneAudioNode, ToneAudioNodeOptions, Synth, PolySynth, SynthOptions, Volume, Gain, CrossFade, Tremolo, Loop, Context } from 'tone';
+import { Frequency, ToneAudioNode, ToneAudioNodeOptions, Synth, PolySynth, SynthOptions, Volume, CrossFade, Tremolo, Loop, Context } from 'tone';
 
 // Import globals with specific aliases to avoid https://github.com/Tonejs/Tone.js/issues/1102
 import { loaded as toneLoaded, getDestination as toneGetDestination, getTransport as toneGetTransport, setContext as toneSetContext } from 'tone';
@@ -93,7 +93,14 @@ class ToneManager {
 
   public readonly cloudChains: CloudAudioChain[];
 
-  private readonly chainReceiverNode: Gain;
+  private readonly chainReceiverNode: Volume;
+
+  get globalVolume(): number {
+    return this.chainReceiverNode.volume.value;
+  }
+  set globalVolume(value: number) {
+    this.chainReceiverNode.volume.value = value;
+  }
 
   private patternsInitialized: boolean = false;
 
@@ -107,7 +114,7 @@ class ToneManager {
     toneSetContext(new Context({ latencyHint : 'playback', lookAhead: 0 }));
 
     // Create a gain node to receive all of the instruments
-    this.chainReceiverNode = new Gain();
+    this.chainReceiverNode = new Volume();
 
     // Create cloud instrument chains
     this.cloudChains = [];
