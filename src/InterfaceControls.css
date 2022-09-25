@@ -26,3 +26,73 @@
   background-color: #304050;
   box-shadow: 0 0 0.5em #405060;
 }
+
+#control-items input[type="range"] {
+  -webkit-appearance: none;
+  height: 2em;
+  width: 5vw;
+  min-width: 90px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+
+#control-items input[type="range"]:focus {
+  outline: none;
+}
+
+/* Style the "track" of the slider */
+#control-items input[type="range"]::-webkit-slider-runnable-track {
+  -webkit-appearance: none;
+  height: 1px;
+  background: #405060;
+  border: 1px solid #405060;
+  border-radius: 0.25em;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+#control-items input[type="range"]::-moz-range-track {
+  height: 1px;
+  background: #405060;
+  border: 1px solid #405060;
+  border-radius: 0.25em;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+/* Style the "thumb" marker of the slider */
+#control-items input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 1.5em;
+  width: 0.5em;
+  margin-top: -0.75em; /* Margin is required for Chrome */
+  background: #607090;
+  border: 1px solid #607090;
+  border-radius: 0.25em;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+#control-items input[type="range"]::-moz-range-thumb {
+  height: 1.5em;
+  width: 0.5em;
+  background: #607090;
+  border: 1px solid #607090;
+  border-radius: 0.25em;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+/* Style the track and thumb on focus */
+#control-items input[type="range"]:focus::-webkit-slider-runnable-track,
+#control-items input[type="range"]:focus::-webkit-slider-thumb {
+  background: #6070CC;
+  box-shadow: 0 0 0.5em #405060;
+}
+
+#control-items input[type="range"]:focus::-moz-range-track,
+  #control-items input[type="range"]:focus::-moz-range-thumb {
+  background: #6070CC;
+  box-shadow: 0 0 0.5em #405060;
+}

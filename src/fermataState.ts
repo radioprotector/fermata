@@ -4,19 +4,14 @@ import { subscribeWithSelector } from 'zustand/middleware';
 /**
  * Global rotation speeds for orbit controls.
  */
-const rotationSpeeds = [0, 1, 3];
+const ROTATION_SPEEDS = [0, 1, 3];
 
 const initialRotationIndex = 1;
 
 /**
  * Global audio volume stages, in decibels.
  */
-const audioVolumes = [-30, -20, -10, 0];
-
-/**
- * The maximum allowable index for global audio volume stages.
- */
-export const MAX_AUDIO_INDEX = 3;
+export const AUDIO_VOLUMES = [-10, -6, -3, 0];
 
 const initialAudioVolumeIndex = 3;
 
@@ -79,18 +74,18 @@ interface FermataState {
 
 export const useFermataStore = create<FermataState>()(subscribeWithSelector((set, get) => ({
   rotationSpeedIndex: initialRotationIndex,
-  rotationSpeed: rotationSpeeds[initialRotationIndex],
+  rotationSpeed: ROTATION_SPEEDS[initialRotationIndex],
   audioVolumeIndex: initialAudioVolumeIndex,
-  audioVolume: audioVolumes[initialAudioVolumeIndex],
+  audioVolume: AUDIO_VOLUMES[initialAudioVolumeIndex],
   isAudioPlaying: false,
   lastResetTime: 0,
 
   setRotationSpeed: (newIndex) => {
     // Assign the index if it's within bounds
-    if (newIndex >= 0 && newIndex < rotationSpeeds.length) {
+    if (newIndex >= 0 && newIndex < ROTATION_SPEEDS.length) {
       set({
         rotationSpeedIndex: newIndex,
-        rotationSpeed: rotationSpeeds[newIndex]
+        rotationSpeed: ROTATION_SPEEDS[newIndex]
       });
     }
   },
@@ -99,22 +94,22 @@ export const useFermataStore = create<FermataState>()(subscribeWithSelector((set
     // Wrap around as needed
     let newIndex = get().rotationSpeedIndex + 1;
 
-    if (newIndex >= rotationSpeeds.length) {
+    if (newIndex >= ROTATION_SPEEDS.length) {
       newIndex = 0;
     }
 
     set({
       rotationSpeedIndex: newIndex,
-      rotationSpeed: rotationSpeeds[newIndex]
+      rotationSpeed: ROTATION_SPEEDS[newIndex]
     });
   },
 
   setAudioVolume: (newIndex) => {
     // Assign the index if it's within bounds
-    if (newIndex >= 0 && newIndex < audioVolumes.length) {
+    if (newIndex >= 0 && newIndex < AUDIO_VOLUMES.length) {
       set({
         audioVolumeIndex: newIndex,
-        audioVolume: audioVolumes[newIndex]
+        audioVolume: AUDIO_VOLUMES[newIndex]
       });
     }
   },

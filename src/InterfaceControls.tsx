@@ -6,7 +6,7 @@ import { start as toneStart } from 'tone';
 import ToneManager from './ToneManager';
 
 import './InterfaceControls.css';
-import { useFermataStore } from './fermataState';
+import { useFermataStore, AUDIO_VOLUMES } from './fermataState';
 
 export interface InterfaceControlsProps {
   toneManager: ToneManager
@@ -18,6 +18,8 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
   const cycleRotationSpeed = useFermataStore((state) => state.cycleRotation);
   const isAudioPlaying = useFermataStore((state) => state.isAudioPlaying);
   const setAudioPlaying = useFermataStore((state) => state.setAudioPlaying);
+  const audioVolumeIndex = useFermataStore((state) => state.audioVolumeIndex);
+  const setAudioVolume = useFermataStore((state) =>  state.setAudioVolume);
 
   const toggleAudioClickHandler = async () => {
     if (!isAudioPlaying) {
@@ -31,6 +33,14 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
       props.toneManager.stopPlayback();
       setAudioPlaying(false);
     }
+  };
+
+  const audioVolumeChangeHandler = (e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const newVolumeIndex = parseInt(input.value, 10);
+
+    setAudioVolume(newVolumeIndex);
+    props.toneManager.globalVolume = AUDIO_VOLUMES[newVolumeIndex];
   };
 
   return (
@@ -59,6 +69,19 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
       >
         <FontAwesomeIcon fixedWidth={true} icon="clock-rotate-left" />
       </button>
+      {
+        isAudioPlaying &&
+        <input
+          type="range"
+          min="0"
+          max={AUDIO_VOLUMES.length - 1}
+          step="1"
+          value={audioVolumeIndex}
+          onChange={audioVolumeChangeHandler}
+          title="Volume"
+          aria-label="Volume"
+        />
+      }
       <button
         type="button"
         title="Toggle audio"
