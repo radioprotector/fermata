@@ -470,6 +470,25 @@ fns.getBoundsVector = function (boidIdx) {
   self.postMessage(message, transferObjects);
 };
 
+/**
+ * Handles when a reset has been requested.
+ */
+fns.handleReset = function() {
+  // Reset all positions to their initial values
+  const newCenterTotal = new Vector3();
+
+  for(let boidIdx = 0; boidIdx < state.length; boidIdx++) {
+    state.positions[boidIdx].copy(state.initialPositions[boidIdx]);
+    newCenterTotal.add(state.positions[boidIdx]);
+
+    // Zero out velocity
+    state.velocities[boidIdx].multiplyScalar(0);
+  }
+
+  state.totaledCenter = newCenterTotal;
+  state.totaledVelocity.multiplyScalar(0);
+};
+
 self.onmessage = function(e) {
   switch(e.data.type) {
     case 'init':
@@ -478,6 +497,10 @@ self.onmessage = function(e) {
 
     case 'ready':
       fns.handleReady();
+      break;
+
+    case 'reset':
+      fns.handleReset();
       break;
 
     default:

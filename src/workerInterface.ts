@@ -65,6 +65,13 @@ export interface initMessageToWorker {
 }
 
 /**
+ * Describes the message that is sent to tell the worker to reset all positions to their initial state.
+ */
+ export interface resetMessageToWorker {
+  type: 'reset';
+}
+
+/**
  * Describes the message that is received from the worker when positions have been updated.
  */
 export interface resultMessageFromWorker {
