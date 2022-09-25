@@ -4,7 +4,10 @@ import { Canvas } from '@react-three/fiber';
 import { CubeCamera, OrbitControls, Stars, Stats } from '@react-three/drei';
 
 import './App.css';
+
 import * as cst from './constants';
+import { useFermataStore } from './fermataState';
+
 import BoidCloudContainer from './BoidCloudContainer';
 import InterfaceControls from './InterfaceControls';
 import ToneManager from './ToneManager';
@@ -12,17 +15,23 @@ import ToneManager from './ToneManager';
 function App(): JSX.Element {
   // Ensure we have a tone manager singleton shared across all of the components
   const toneManager = useRef<ToneManager>(new ToneManager());
+  const setAudioPlaying = useFermataStore((state) => state.setAudioPlaying);
 
   useEffect(() => {
+    // Ensure that when the tone manager is initialized, it reflects the audio volume in the state
     const currentToneManager = toneManager.current;
+    currentToneManager.globalVolume = useFermataStore.getState().audioVolume;
 
     // Gracefully tear down the old tone manager when needed
     return function cleanup() {
+      // Ensure that audio is not indicated as playing, since resetting the tone manager creates a new audio context that must be started
+      setAudioPlaying(false);
+
       if (currentToneManager !== null) {
         currentToneManager.dispose();
       }
     }
-  }, [toneManager])
+  }, [toneManager, setAudioPlaying]);
 
   return (
     <div id="canvas-container">
