@@ -1,4 +1,5 @@
 import create from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
 
 /**
  * Global rotation speeds for orbit controls.
@@ -71,7 +72,7 @@ interface FermataState {
   initiateReset: () => void;
 }
 
-export const useFermataStore = create<FermataState>((set, get) => ({
+export const useFermataStore = create<FermataState>()(subscribeWithSelector((set, get) => ({
   rotationSpeedIndex: initialRotationIndex,
   rotationSpeed: rotationSpeeds[initialRotationIndex],
   audioVolumeIndex: initialAudioVolumeIndex,
@@ -122,4 +123,4 @@ export const useFermataStore = create<FermataState>((set, get) => ({
   initiateReset: () => {
     set({ lastResetTime: Date.now() });
   }
-}));
+})));
