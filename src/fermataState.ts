@@ -3,7 +3,7 @@ import create from 'zustand';
 /**
  * Global rotation speeds for orbit controls.
  */
-const rotationSpeeds = [0, 1, 2];
+const rotationSpeeds = [0, 1, 3];
 
 const initialRotationIndex = 1;
 
