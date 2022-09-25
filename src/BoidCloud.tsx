@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Object3D, Vector3, Color, AxesHelper, Group, BoxGeometry } from "three";
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
@@ -21,13 +21,21 @@ export interface BoidCloudProps {
   audioChain: CloudAudioChain;
 };
 
+/**
+ * Scratch object used for calculating instanced mesh position/rotation matrices.
+ */
+const dummyObject = new Object3D();
+
+/**
+ * Scratch object used for calculating instanced mesh colors.
+ */
+const dummyColor = new Color();
+
 function BoidCloud(props: BoidCloudProps): JSX.Element {
   const cloudGroupRef = useRef<Group>(null!);
   const instMeshRef = useRef<InstancedMesh>(null!);
   const debugTextRef = useRef<Text>(null);
   const axesHelperRef = useRef<AxesHelper>(null);
-  const dummyObject = useMemo(() => new Object3D(), []);
-  const dummyColor = useMemo(() => new Color(), []);
 
   // Track when we last updated the geometry/music
   const lastRenderTime = useRef(0);
