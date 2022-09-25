@@ -4,7 +4,8 @@ import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 
 import { CloudAudioChain } from "./ToneManager";
-import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from "./workerInterface";
+import { initMessageToWorker, readyMessageToWorker, resetMessageToWorker, resultMessageFromWorker } from './workerInterface';
+import { useFermataStore } from "./fermataState";
 
 /**
  * The properties required by a {@see BoidCloud}.
@@ -120,6 +121,21 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       lastWorkerResult.current = null;
     }
   }, [props.periodSeconds, props.bounds, props.cloudSize]);
+
+   // When a reset event has been initiated in state, we want to notify the worker
+   useEffect(() => {
+    const notifyWorker = (): void => {
+      if (worker.current !== null) {
+        const resetMessage: resetMessageToWorker = {
+          type: 'reset'
+        };
+
+        worker.current.postMessage(resetMessage);
+      }
+    };
+
+    return useFermataStore.subscribe((state) => state.lastResetTime, notifyWorker);
+  }, []); 
 
   useFrame((state) => {
     // See if it's time to update the buffers

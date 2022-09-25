@@ -8,7 +8,7 @@ import * as cst from './constants';
 
 import ToneManager from './ToneManager';
 import BoidCloud from './BoidCloud';
-import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from './workerInterface';
+import { initMessageToWorker, readyMessageToWorker, resetMessageToWorker, resultMessageFromWorker } from './workerInterface';
 import { useFermataStore } from './fermataState';
 
 /**
@@ -138,6 +138,21 @@ useEffect(() => {
     lastWorkerResult.current = null;
   }
 }, []);
+
+  // When a reset event has been initiated in state, we want to notify the worker
+  useEffect(() => {
+    const notifyWorker = (): void => {
+      if (groupsWorker.current !== null) {
+        const resetMessage: resetMessageToWorker = {
+          type: 'reset'
+        };
+
+        groupsWorker.current.postMessage(resetMessage);
+      }
+    };
+
+    return useFermataStore.subscribe((state) => state.lastResetTime, notifyWorker);
+  }, []);
 
 // Store a reference to orbit controls
 const orbitControlsRef = useRef<OrbitControlsImpl>(null!);

@@ -13,6 +13,7 @@ export interface InterfaceControlsProps {
 }
 
 function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
+  const initiateReset = useFermataStore((state) => state.initiateReset);
   const rotationSpeedIndex = useFermataStore((state) => state.rotationSpeedIndex);
   const cycleRotationSpeed = useFermataStore((state) => state.cycleRotation);
   const isAudioPlaying = useFermataStore((state) => state.isAudioPlaying);
@@ -46,10 +47,17 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
           className="fa-layers fa-fw"
         >
           <FontAwesomeIcon icon="arrow-rotate-forward" transform="shrink-1 left-6" />
-          {rotationSpeedIndex == 0 && <FontAwesomeIcon icon="pause" transform="shrink-6 right-8" />}
-          {rotationSpeedIndex == 1 && <FontAwesomeIcon icon="play" transform="shrink-6 right-8" />}
-          {rotationSpeedIndex == 2 && <FontAwesomeIcon icon="forward" transform="shrink-6 right-8" />}
+          {rotationSpeedIndex === 0 && <FontAwesomeIcon icon="pause" transform="shrink-6 right-8" />}
+          {rotationSpeedIndex === 1 && <FontAwesomeIcon icon="play" transform="shrink-6 right-8" />}
+          {rotationSpeedIndex === 2 && <FontAwesomeIcon icon="forward" transform="shrink-6 right-8" />}
         </span>
+      </button>
+      <button
+        type="button"
+        title="Reset positions"
+        onClick={initiateReset}
+      >
+        <FontAwesomeIcon fixedWidth={true} icon="clock-rotate-left" />
       </button>
       <button
         type="button"
