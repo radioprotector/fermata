@@ -2,13 +2,13 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faVolumeUp, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
+import { faClockRotateLeft, faArrowRotateForward, faPause, faPlay, faForward, faVolumeUp, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
 
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-library.add(faVolumeUp, faVolumeMute);
+library.add(faClockRotateLeft, faArrowRotateForward, faPause, faPlay, faForward, faVolumeUp, faVolumeMute);
 
 const container = document.getElementById('root');
 const root = createRoot(container!);
