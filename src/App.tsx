@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useRef } from 'react';
 import { Texture } from 'three';
 import { Canvas } from '@react-three/fiber';
-import { CubeCamera, OrbitControls, Stars, Stats } from '@react-three/drei';
+import { CubeCamera, Stars, Stats } from '@react-three/drei';
 
 import './App.css';
 
@@ -38,13 +38,6 @@ function App(): JSX.Element {
       <Suspense fallback={null}>
         <Canvas
           camera={{ fov: 75, near: 0.1, far: 1000, position: [0, cst.OVERALL_Y_RANGE + (cst.CLOUD_Y_RANGE * 1.618), cst.OVERALL_XZ_RANGE + cst.CLOUD_XZ_RANGE] }}>
-          <OrbitControls
-            enablePan={true}
-            enableRotate={true}
-            enableZoom={true}
-            autoRotate={true}
-            autoRotateSpeed={1}
-          />
           <Stars
             radius={2 * cst.OVERALL_XZ_RANGE}
             speed={0}

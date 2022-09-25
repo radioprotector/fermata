@@ -1,12 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { BoxGeometry, Color, Group, MathUtils, Vector3 } from 'three';
+import { OrbitControls } from '@react-three/drei';
+import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 import * as cst from './constants';
 
 import ToneManager from './ToneManager';
 import BoidCloud from './BoidCloud';
 import { initMessageToWorker, readyMessageToWorker, resultMessageFromWorker } from './workerInterface';
+import { useFermataStore } from './fermataState';
 
 /**
  * The properties required by a {@see BoidCloudContainer}.
@@ -136,7 +139,15 @@ useEffect(() => {
   }
 }, []);
 
+// Store a reference to orbit controls
+const orbitControlsRef = useRef<OrbitControlsImpl>(null!);
+const initialOrbitRotateSpeed = useFermataStore.getState().rotationSpeed;
+
 useFrame((state) => {
+  // Ensure orbit controls reflect state
+  orbitControlsRef.current.autoRotateSpeed = useFermataStore.getState().rotationSpeed;
+
+  // See if it is time to update the boid cloud positions
   if (state.clock.elapsedTime > lastRenderTime.current + FRAME_SECONDS) {
     // Make sure we have a result
     if (lastWorkerResult.current !== null) {
@@ -182,6 +193,15 @@ useFrame((state) => {
   return (
     <group>
       {cloudContainerElements}
+      {/* Track orbit controls in this element so we can update them via useFrame */}
+      <OrbitControls
+        ref={orbitControlsRef}
+        enablePan={true}
+        enableRotate={true}
+        enableZoom={true}
+        autoRotate={true}
+        autoRotateSpeed={initialOrbitRotateSpeed}
+      />
       {
         /* Only include cloud inner bounds in development */
         process.env.NODE_ENV !== 'production'
