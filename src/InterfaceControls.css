@@ -16,13 +16,13 @@
   display: inline-block;
   padding: 0.25em 0.75em;
   font-size: 1.2em;
-  color: white;
-  background-color: #506070;
-  border: 1px solid #708090;
+  color: #cccccc;
+  background-color: #102030;
+  border: 1px solid #405060;
   border-radius: 0.25em;
 }
 
 #control-items button:hover {
   background-color: #304050;
-  box-shadow: 0 0 0.5em #708090;
+  box-shadow: 0 0 0.5em #405060;
 }
