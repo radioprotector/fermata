@@ -11,9 +11,14 @@ const initialRotationIndex = 1;
 /**
  * Global audio volume stages, in decibels.
  */
-const audioVolumes = [0, -5, -10, -20];
+const audioVolumes = [-30, -20, -10, 0];
 
-const initialAudioVolumeIndex = 0;
+/**
+ * The maximum allowable index for global audio volume stages.
+ */
+export const MAX_AUDIO_INDEX = 3;
+
+const initialAudioVolumeIndex = 3;
 
 interface FermataState {
   /**
@@ -82,7 +87,7 @@ export const useFermataStore = create<FermataState>()(subscribeWithSelector((set
 
   setRotationSpeed: (newIndex) => {
     // Assign the index if it's within bounds
-    if (newIndex > 0 && newIndex < rotationSpeeds.length) {
+    if (newIndex >= 0 && newIndex < rotationSpeeds.length) {
       set({
         rotationSpeedIndex: newIndex,
         rotationSpeed: rotationSpeeds[newIndex]
@@ -106,7 +111,7 @@ export const useFermataStore = create<FermataState>()(subscribeWithSelector((set
 
   setAudioVolume: (newIndex) => {
     // Assign the index if it's within bounds
-    if (newIndex > 0 && newIndex < audioVolumes.length) {
+    if (newIndex >= 0 && newIndex < audioVolumes.length) {
       set({
         audioVolumeIndex: newIndex,
         audioVolume: audioVolumes[newIndex]
