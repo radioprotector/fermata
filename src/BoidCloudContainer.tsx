@@ -176,8 +176,8 @@ useFrame((state) => {
 
       if (props.toneManager !== null && props.toneManager.cloudChains.length > 0 && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
         // As individual clouds get closer to the center (i.e. have a shorter position vector length), increase the volume
-        const farVolumeDb = -65;
-        const closeVolumeDb = -25;
+        const farVolumeDb = -55;
+        const closeVolumeDb = -20;
         const farVolumeRadiusSq = Math.pow(cloudDistributionRadius * 1.25, 2);
         const closeVolumeRadiusSq = Math.pow(cloudDistributionRadius * 0.75, 2);
 
