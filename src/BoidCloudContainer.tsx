@@ -213,6 +213,8 @@ useFrame((state) => {
         enablePan={true}
         enableRotate={true}
         enableZoom={true}
+        minDistance={2 * cst.OVERALL_XZ_INNER_RADIUS}
+        maxDistance={9 * cst.OVERALL_XZ_RANGE}
         autoRotate={true}
         autoRotateSpeed={initialOrbitRotateSpeed}
       />
