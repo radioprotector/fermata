@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/fermata/static/css/main.dca91406.css",
+    "main.js": "/fermata/static/js/main.9a94c432.js",
+    "static/js/553.8cc49d00.chunk.js": "/fermata/static/js/553.8cc49d00.chunk.js",
+    "static/js/465.8cc49d00.chunk.js": "/fermata/static/js/465.8cc49d00.chunk.js",
+    "static/js/787.f46a8233.chunk.js": "/fermata/static/js/787.f46a8233.chunk.js",
+    "static/js/760.025b1d20.chunk.js": "/fermata/static/js/760.025b1d20.chunk.js",
+    "index.html": "/fermata/index.html",
+    "main.dca91406.css.map": "/fermata/static/css/main.dca91406.css.map",
+    "main.9a94c432.js.map": "/fermata/static/js/main.9a94c432.js.map",
+    "553.8cc49d00.chunk.js.map": "/fermata/static/js/553.8cc49d00.chunk.js.map",
+    "465.8cc49d00.chunk.js.map": "/fermata/static/js/465.8cc49d00.chunk.js.map",
+    "787.f46a8233.chunk.js.map": "/fermata/static/js/787.f46a8233.chunk.js.map",
+    "760.025b1d20.chunk.js.map": "/fermata/static/js/760.025b1d20.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.dca91406.css",
+    "static/js/main.9a94c432.js"
+  ]
+}
