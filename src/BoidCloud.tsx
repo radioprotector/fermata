@@ -214,8 +214,8 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           if (debugTextRef.current !== null && (debugTextRef.current as any).visible) {
             const instrumentDescStr = props.toneManager.getInstrumentDescription(props.cloudIndex);
             const volumeDbStr = props.toneManager.getCloudVolume(props.cloudIndex).toFixed(0);
-            const chordPercentageStr = props.toneManager.getChordIntensity(props.cloudIndex).toFixed(0);
-            const fxPercentageStr = props.toneManager.getEffectIntensity(props.cloudIndex).toFixed(0);
+            const chordPercentageStr = (props.toneManager.getChordIntensity(props.cloudIndex) * 100).toFixed(0);
+            const fxPercentageStr = (props.toneManager.getEffectIntensity(props.cloudIndex) * 100).toFixed(0);
             const clockPercentageStr = (lastWorkerResult.current.clockPercentage * 100).toFixed(0);
             const attractionRepulsionStr = lastWorkerResult.current.attractionRepulsionFactor.toFixed(1);
 
