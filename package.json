@@ -20,6 +20,7 @@
     "@types/node": "^16.11.21",
     "@types/react": "^18.0.20",
     "@types/react-dom": "^18.0.6",
+    "gh-pages": "^4.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.0",
@@ -29,6 +30,8 @@
     "zustand": "^4.1.1"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "npx gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build && node craBugWorkaround.js",
     "start:prod": "env-cmd -f .env.prodlocal react-scripts build && node craBugWorkaround.js && npx serve -s build -l 4000 -n",
