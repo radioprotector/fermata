@@ -174,7 +174,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
           const zStatY = Math.min(Math.abs((boidPosition[1] - cloudMeanY) / cloudStdevY), Z_MAX);
           const zStatZ = Math.min(Math.abs((boidPosition[2] - cloudMeanZ) / cloudStdevZ), Z_MAX);
 
-          // Further darken the color based on its distance from the center of mass
+          // Further lighten the color based on its distance from the center of mass
           dummyColor.setRGB(
             MathUtils.mapLinear(zStatX, 0.0, Z_MAX, props.baseColor.r, 1.0),
             MathUtils.mapLinear(zStatY, 0.0, Z_MAX, props.baseColor.g, 1.0),
