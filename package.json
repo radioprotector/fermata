@@ -1,7 +1,15 @@
 {
   "name": "fermata",
   "version": "0.1.0",
+  "description": "A browser-based flocking simulation incorporating 3D rendering and dynamic audio",
   "homepage": "https://radioprotector.github.io/fermata",
+  "bugs": "https://github.com/radioprotector/fermata/issues",
+  "author": "Cate Stock <radioprotector@users.noreply.github.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/radioprotector/fermata.git"
+  },
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.2.0",
