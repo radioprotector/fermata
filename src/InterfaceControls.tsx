@@ -87,8 +87,8 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
         title="Toggle audio"
         onClick={toggleAudioClickHandler}
       >
-        {isAudioPlaying && <FontAwesomeIcon icon="volume-mute" />}
-        {!isAudioPlaying && <FontAwesomeIcon icon="volume-up" />}
+        {isAudioPlaying && <FontAwesomeIcon icon="volume-up" />}
+        {!isAudioPlaying && <FontAwesomeIcon icon="volume-mute" />}
       </button>
     </div>
   );
