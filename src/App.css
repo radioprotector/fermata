@@ -15,4 +15,9 @@ html, body {
   user-select: none;
   touch-action: none;
   overflow: visible;
+  cursor: grab;
+}
+
+#canvas-container.grabbing {
+  cursor: grabbing;
 }

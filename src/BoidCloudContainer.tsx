@@ -51,91 +51,91 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
       </group>
     });
 
-// Track when we last updated the cloud positions/music
-const lastRenderTime = useRef(0);
-const lastMusicTime = useRef(0);
-const FRAME_SECONDS = 1/30;
-const MUSIC_SECONDS = 1/10;
+  // Track when we last updated the cloud positions/music
+  const lastRenderTime = useRef(0);
+  const lastMusicTime = useRef(0);
+  const FRAME_SECONDS = 1/30;
+  const MUSIC_SECONDS = 1/10;
 
-// Create a web worker to handle the boid *group* processing
-const lastWorkerResult = useRef<resultMessageFromWorker | null>(null);
-const groupsWorker = useRef<Worker>(null!);
+  // Create a web worker to handle the boid *group* processing
+  const lastWorkerResult = useRef<resultMessageFromWorker | null>(null);
+  const groupsWorker = useRef<Worker>(null!);
 
-useEffect(() => {
-  // Create a handler
-  const messageHandler = (e: MessageEvent) => {
-    if (e.data && e.data.type === 'result') {
-      lastWorkerResult.current = e.data;
+  useEffect(() => {
+    // Create a handler
+    const messageHandler = (e: MessageEvent) => {
+      if (e.data && e.data.type === 'result') {
+        lastWorkerResult.current = e.data;
+      }
+    };
+
+    const errorHandler = (e: ErrorEvent) => {
+      console.error('group web worker error', e);
+    };
+
+    // Create the web worker and handlers
+    groupsWorker.current = new Worker(new URL('./boidsWorker.js', import.meta.url));
+    groupsWorker.current.onmessage = messageHandler;
+    groupsWorker.current.onerror = errorHandler;
+
+    // Initialize the worker state based on the positioning of the boid groups
+    const initPositions: Float32Array[] = [];
+    const initTransferObjects = [];
+
+    for(let boidGroupIdx = 0; boidGroupIdx < cst.CLOUD_COUNT; boidGroupIdx++) {
+      const groupObject = cloudGroups.current[boidGroupIdx];
+
+      const groupPosition = new Float32Array(3);
+      groupPosition[0] = groupObject.position.x;
+      groupPosition[1] = groupObject.position.y;
+      groupPosition[2] = groupObject.position.z;
+
+      initPositions.push(groupPosition);
+      initTransferObjects.push(groupPosition.buffer);
     }
-  };
 
-  const errorHandler = (e: ErrorEvent) => {
-    console.error('group web worker error', e);
-  };
+    const initMessage: initMessageToWorker = {
+      type: 'init',
+      periodSeconds: cst.OVERALL_PERIOD_SECONDS,
+      bounds: new Float32Array([cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, cst.OVERALL_XZ_RANGE]),
+      innerBounds: new Float32Array([cloudsInnerBounds.x, cloudsInnerBounds.y, cloudsInnerBounds.z]),
+      initialPositions: initPositions,
+      maximumVelocity: 0.0025,
+      attractionRepulsionBias: 0,
+      attractionRepulsionIntensity: 0.0025,
+      revertIntensity: 0.001,
+      distancingThreshold: 0.005,
+      matchingVelocityIntensity: 0.005,
+      boundingReturnIntensity: 0.1
+      // maximumVelocity: 0,
+      // attractionRepulsionBias: 0,
+      // attractionRepulsionIntensity: 0,
+      // revertIntensity: 0,
+      // distancingThreshold: 0,
+      // matchingVelocityIntensity: 0,
+      // boundingReturnIntensity: 0
+    };
 
-  // Create the web worker and handlers
-  groupsWorker.current = new Worker(new URL('./boidsWorker.js', import.meta.url));
-  groupsWorker.current.onmessage = messageHandler;
-  groupsWorker.current.onerror = errorHandler;
+    groupsWorker.current.postMessage(initMessage, initTransferObjects);
 
-  // Initialize the worker state based on the positioning of the boid groups
-  const initPositions: Float32Array[] = [];
-  const initTransferObjects = [];
-
-  for(let boidGroupIdx = 0; boidGroupIdx < cst.CLOUD_COUNT; boidGroupIdx++) {
-    const groupObject = cloudGroups.current[boidGroupIdx];
-
-    const groupPosition = new Float32Array(3);
-    groupPosition[0] = groupObject.position.x;
-    groupPosition[1] = groupObject.position.y;
-    groupPosition[2] = groupObject.position.z;
-
-    initPositions.push(groupPosition);
-    initTransferObjects.push(groupPosition.buffer);
-  }
-
-  const initMessage: initMessageToWorker = {
-    type: 'init',
-    periodSeconds: cst.OVERALL_PERIOD_SECONDS,
-    bounds: new Float32Array([cst.OVERALL_XZ_RANGE, cst.OVERALL_Y_RANGE, cst.OVERALL_XZ_RANGE]),
-    innerBounds: new Float32Array([cloudsInnerBounds.x, cloudsInnerBounds.y, cloudsInnerBounds.z]),
-    initialPositions: initPositions,
-    maximumVelocity: 0.0025,
-    attractionRepulsionBias: 0,
-    attractionRepulsionIntensity: 0.0025,
-    revertIntensity: 0.001,
-    distancingThreshold: 0.005,
-    matchingVelocityIntensity: 0.005,
-    boundingReturnIntensity: 0.1
-    // maximumVelocity: 0,
-    // attractionRepulsionBias: 0,
-    // attractionRepulsionIntensity: 0,
-    // revertIntensity: 0,
-    // distancingThreshold: 0,
-    // matchingVelocityIntensity: 0,
-    // boundingReturnIntensity: 0
-  };
-
-  groupsWorker.current.postMessage(initMessage, initTransferObjects);
-
-  // Reset the last result
-  lastWorkerResult.current = null;
-
-  // Tell the worker to start generating data
-  const readyMessage: readyMessageToWorker = {
-    type: 'ready'
-  };
-
-  groupsWorker.current.postMessage(readyMessage);
-
-  // Clean up events and terminate the worker
-  return () => {
-    groupsWorker.current.removeEventListener('message', messageHandler);
-    groupsWorker.current.removeEventListener('error', errorHandler);
-    groupsWorker.current.terminate();
+    // Reset the last result
     lastWorkerResult.current = null;
-  }
-}, []);
+
+    // Tell the worker to start generating data
+    const readyMessage: readyMessageToWorker = {
+      type: 'ready'
+    };
+
+    groupsWorker.current.postMessage(readyMessage);
+
+    // Clean up events and terminate the worker
+    return () => {
+      groupsWorker.current.removeEventListener('message', messageHandler);
+      groupsWorker.current.removeEventListener('error', errorHandler);
+      groupsWorker.current.terminate();
+      lastWorkerResult.current = null;
+    }
+  }, []);
 
   // When a reset event has been initiated in state, we want to notify the worker
   useEffect(() => {
@@ -204,7 +204,16 @@ useFrame((state) => {
   }
 });
 
-  return (
+// Toggle a cursor when grabbing starts
+const onOrbitDragStart = () => {
+  document.getElementById('canvas-container')?.classList.add('grabbing');
+};
+
+const onOrbitDragEnd = () => {
+  document.getElementById('canvas-container')?.classList.remove('grabbing');
+};
+
+return (
     <group>
       {cloudContainerElements}
       {/* Track orbit controls in this element so we can update them via useFrame */}
@@ -215,6 +224,8 @@ useFrame((state) => {
         enableZoom={true}
         minDistance={2 * cst.OVERALL_XZ_INNER_RADIUS}
         maxDistance={9 * cst.OVERALL_XZ_RANGE}
+        onStart={onOrbitDragStart}
+        onEnd={onOrbitDragEnd}
         autoRotate={true}
         autoRotateSpeed={initialOrbitRotateSpeed}
       />
