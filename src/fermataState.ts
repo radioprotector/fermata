@@ -11,9 +11,9 @@ const initialRotationIndex = 1;
 /**
  * Global audio volume stages, in decibels.
  */
-export const AUDIO_VOLUMES = [-10, -6, -3, 0];
+export const AUDIO_VOLUMES = [-30, -20, -10, -5, 0];
 
-const initialAudioVolumeIndex = 2;
+const initialAudioVolumeIndex = 3;
 
 interface FermataState {
   /**
