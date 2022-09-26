@@ -176,8 +176,8 @@ class ToneManager {
         // Create a loop for each audio chain
         for(const cloudChain of this._cloudChains) {
           new Loop(() => {
-            cloudChain.baseInstrument.triggerAttackRelease(cloudChain.baseNote, cloudChain.periodSeconds * 1.05);
-            cloudChain.chordInstrument.triggerAttackRelease(cloudChain.chordFrequencies, cloudChain.periodSeconds * 1.05);
+            cloudChain.baseInstrument.triggerAttackRelease(cloudChain.baseNote, cloudChain.periodSeconds);
+            cloudChain.chordInstrument.triggerAttackRelease(cloudChain.chordFrequencies, cloudChain.periodSeconds);
           }, cloudChain.periodSeconds).start(0);
         }
 
