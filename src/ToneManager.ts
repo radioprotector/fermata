@@ -187,18 +187,17 @@ class ToneManager {
     });
   }
 
-  public startPlayback(): void {
+  public async startPlayback(): Promise<void> {
     // Ensure audio has been initialized
-    this.ensureAudioInitialized()
-      .then(() => {
-        toneGetDestination().mute = false;
+    await this.ensureAudioInitialized()
 
-        const toneTransport = toneGetTransport();
-        toneTransport.bpm.value = 100;
-        toneTransport.start();
-    
-        this._isPlaying = true;
-      });
+    toneGetDestination().mute = false;
+
+    const toneTransport = toneGetTransport();
+    toneTransport.bpm.value = 100;
+    toneTransport.start();
+
+    this._isPlaying = true;
   }
  
   public stopPlayback(): void {

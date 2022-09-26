@@ -21,9 +21,7 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
   const audioVolumeIndex = useFermataStore((state) => state.audioVolumeIndex);
   const setAudioVolume = useFermataStore((state) =>  state.setAudioVolume);
 
-  // For whatever reason, Safari autoplay really doesn't like async click handlers for starting audio context,
-  // so we're going to make sure this is synchronous even if the underlying methods aren't
-  const toggleAudioClickHandler = () => {
+  const toggleAudioClickHandler = async () => {
     if (!isAudioPlaying) {
       // Ensure we have a Tone context initialized and ready to play.
       // Unfortunately, this *has* to be in this event handler to prevent auto-play blocking
@@ -41,7 +39,7 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
         toneContext.resume();
       }
 
-      props.toneManager.startPlayback();
+      await props.toneManager.startPlayback();
       setAudioPlaying(true);
     }
     else {
