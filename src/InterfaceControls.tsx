@@ -3,10 +3,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // Import globals with specific aliases to avoid https://github.com/Tonejs/Tone.js/issues/1102
 import { start as toneStart } from 'tone';
 
+import { useFermataStore, AUDIO_VOLUMES } from './fermataState';
 import ToneManager from './ToneManager';
 
 import './InterfaceControls.css';
-import { useFermataStore, AUDIO_VOLUMES } from './fermataState';
 
 export interface InterfaceControlsProps {
   toneManager: ToneManager

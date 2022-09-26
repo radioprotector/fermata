@@ -3,24 +3,15 @@ import { TetrahedronGeometry, InstancedMesh, MathUtils, MeshBasicMaterial, Objec
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 
-import { CloudAudioChain } from "./ToneManager";
+import * as cst from './constants';
+import { useFermataStore } from './fermataState';
+import ToneManager from './ToneManager';
 import { initMessageToWorker, readyMessageToWorker, resetMessageToWorker, resultMessageFromWorker } from './workerInterface';
-import { useFermataStore } from "./fermataState";
 
 /**
- * The properties required by a {@see BoidCloud}.
+ * The bounds of each cloud.
  */
-export interface BoidCloudProps {
-  cloudSize: number;
-
-  periodSeconds: number;
-
-  bounds: Vector3;
-
-  baseColor: Color;
-
-  audioChain: CloudAudioChain;
-};
+ const bounds = new Vector3(cst.CLOUD_XZ_RANGE, cst.CLOUD_Y_RANGE / 2, cst.CLOUD_XZ_RANGE);
 
 /**
  * Scratch object used for calculating instanced mesh position/rotation matrices.
@@ -32,11 +23,25 @@ const dummyObject = new Object3D();
  */
 const dummyColor = new Color();
 
+/**
+ * The properties required by a {@see BoidCloud}.
+ */
+export interface BoidCloudProps {
+  cloudIndex: number;
+
+  baseColor: Color;
+
+  toneManager: ToneManager;
+};
+
 function BoidCloud(props: BoidCloudProps): JSX.Element {
   const cloudGroupRef = useRef<Group>(null!);
   const instMeshRef = useRef<InstancedMesh>(null!);
   const debugTextRef = useRef<Text>(null);
   const axesHelperRef = useRef<AxesHelper>(null);
+
+  // Get calculated properties
+  const periodSeconds = cst.CLOUD_PERIOD_SECONDS[props.cloudIndex];
 
   // Track when we last updated the geometry/music
   const lastRenderTime = useRef(0);
@@ -70,14 +75,14 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
     const initTransferObjects = [];
     const dummyVector = new Vector3();
 
-    for(let boidIdx = 0; boidIdx < props.cloudSize; boidIdx++) {
+    for(let boidIdx = 0; boidIdx < cst.CLOUD_POINT_SIZE; boidIdx++) {
       const boidPosition = new Float32Array(3);
 
       // Randomize the vector
       dummyVector.randomDirection();
-      dummyVector.setX(dummyVector.x * (props.bounds.x / 1.5));
-      dummyVector.setY(dummyVector.y * (props.bounds.y / 1.5));
-      dummyVector.setZ(dummyVector.z * (props.bounds.z / 1.5));
+      dummyVector.setX(dummyVector.x * (bounds.x / 1.5));
+      dummyVector.setY(dummyVector.y * (bounds.y / 1.5));
+      dummyVector.setZ(dummyVector.z * (bounds.z / 1.5));
       boidPosition[0] = dummyVector.x;
       boidPosition[1] = dummyVector.y;
       boidPosition[2] = dummyVector.z;
@@ -88,8 +93,8 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
 
     const initMessage: initMessageToWorker = {
       type: 'init',
-      periodSeconds: props.periodSeconds,
-      bounds: new Float32Array(props.bounds.toArray()),
+      periodSeconds: periodSeconds,
+      bounds: new Float32Array(bounds.toArray()),
       innerBounds: new Float32Array([0, 0, 0]),
       initialPositions: initPositions,
       maximumVelocity: 0.02,
@@ -120,7 +125,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       worker.current.terminate();
       lastWorkerResult.current = null;
     }
-  }, [props.periodSeconds, props.bounds, props.cloudSize]);
+  }, [periodSeconds]);
 
    // When a reset event has been initiated in state, we want to notify the worker
    useEffect(() => {
@@ -149,12 +154,12 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         const cloudStdevY = lastWorkerResult.current.stdevs[1];
         const cloudStdevZ = lastWorkerResult.current.stdevs[2];
 
-        const rotationClockPercentage = state.clock.getElapsedTime() / (0.5 * props.periodSeconds);
+        const rotationClockPercentage = state.clock.getElapsedTime() / (0.5 * periodSeconds);
         const rotationClockAmount1 = Math.cos(rotationClockPercentage * 2 * Math.PI);
         const rotationClockAmount2 = Math.sin(rotationClockPercentage * 2 * Math.PI);
 
         // Update positions on all of the boids
-        for(let boidIdx = 0; boidIdx < props.cloudSize; boidIdx++) {
+        for(let boidIdx = 0; boidIdx < cst.CLOUD_POINT_SIZE; boidIdx++) {
           const boidPosition = lastWorkerResult.current.positions[boidIdx];
           dummyObject.position.set(boidPosition[0], boidPosition[1], boidPosition[2]);
           dummyObject.rotation.set(0, rotationClockAmount1 - boidIdx, rotationClockAmount2 + boidIdx);
@@ -183,20 +188,20 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         instMeshRef.current.instanceColor!.needsUpdate = true;
 
         // Update the cloud audio chain if we have one
-        if (props.audioChain != null && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
+        if (props.toneManager != null && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
           // The closer the mean values are to 0, the more "accuracy" we have, which increases the prominence of the chords (the second input in the crossfade)
-          const deviationPercentage =  (MathUtils.mapLinear(Math.abs(cloudMeanX), 0, props.bounds.x / 2, 0, 1) +
-            MathUtils.mapLinear(Math.abs(cloudMeanY), 0, props.bounds.y / 2, 0, 1) +
-            MathUtils.mapLinear(Math.abs(cloudMeanZ), 0, props.bounds.z / 2, 0, 1)) / 3;
+          const deviationPercentage =  (MathUtils.mapLinear(Math.abs(cloudMeanX), 0, bounds.x / 2, 0, 1) +
+            MathUtils.mapLinear(Math.abs(cloudMeanY), 0, bounds.y / 2, 0, 1) +
+            MathUtils.mapLinear(Math.abs(cloudMeanZ), 0, bounds.z / 2, 0, 1)) / 3;
 
-          props.audioChain.crossFade.fade.value = MathUtils.clamp(1 - deviationPercentage, 0, 1);
+          props.toneManager.setChordIntensity(props.cloudIndex, MathUtils.clamp(1 - deviationPercentage, 0, 1));
 
           // // The higher the standard deviation is, the more "dispersal" we have, which impacts the intensity of the effect.
-          const dispersalPercentage = (MathUtils.mapLinear(cloudStdevX, 0, props.bounds.x, 0, 1) +
-            MathUtils.mapLinear(cloudStdevY, 0, props.bounds.y, 0, 1) +
-            MathUtils.mapLinear(cloudStdevZ, 0, props.bounds.z, 0, 1)) / 3;
+          const dispersalPercentage = (MathUtils.mapLinear(cloudStdevX, 0, bounds.x, 0, 1) +
+            MathUtils.mapLinear(cloudStdevY, 0, bounds.y, 0, 1) +
+            MathUtils.mapLinear(cloudStdevZ, 0, bounds.z, 0, 1)) / 3;
 
-          props.audioChain.effect.wet.value = MathUtils.clamp(1 - dispersalPercentage, 0, 1);
+          props.toneManager.setEffectIntensity(props.cloudIndex, MathUtils.clamp(1 - dispersalPercentage, 0, 1));
 
           // Indicate when the music was updated
           lastMusicTime.current = state.clock.elapsedTime;
@@ -204,16 +209,17 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
 
         // Update debug contents if we have them
         if (process.env.NODE_ENV !== 'production') {
-          // Update debug text
+          // Update debug text only if visible, because this component appears to leak some
           // HACK: Work around typing problems with drei's Text component 
           if (debugTextRef.current !== null && (debugTextRef.current as any).visible) {
-            const volumeDbStr = props.audioChain.volume.volume.value.toFixed(0);
-            const chordPercentageStr = (props.audioChain.crossFade.fade.value * 100).toFixed(0);
-            const fxPercentageStr = (props.audioChain.effect.wet.value * 100).toFixed(0);
+            const instrumentDescStr = props.toneManager.getInstrumentDescription(props.cloudIndex);
+            const volumeDbStr = props.toneManager.getCloudVolume(props.cloudIndex).toFixed(0);
+            const chordPercentageStr = props.toneManager.getChordIntensity(props.cloudIndex).toFixed(0);
+            const fxPercentageStr = props.toneManager.getEffectIntensity(props.cloudIndex).toFixed(0);
             const clockPercentageStr = (lastWorkerResult.current.clockPercentage * 100).toFixed(0);
             const attractionRepulsionStr = lastWorkerResult.current.attractionRepulsionFactor.toFixed(1);
 
-            (debugTextRef.current as any).text = `${props.audioChain.baseNote} ${props.audioChain.waveformType} ${volumeDbStr}dB\n` + 
+            (debugTextRef.current as any).text = `${instrumentDescStr} ${volumeDbStr}dB\n` + 
               `µ: (${cloudMeanX.toFixed(1)}, ${cloudMeanY.toFixed(1)}, ${cloudMeanZ.toFixed(1)}) - ${chordPercentageStr}% chord\n` +
               `s: (${cloudStdevX.toFixed(1)}, ${cloudStdevY.toFixed(1)}, ${cloudStdevZ.toFixed(1)}) - ${fxPercentageStr}% fx\n` +
               `c: ${attractionRepulsionStr} - ${clockPercentageStr}% clock`;
@@ -247,7 +253,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
       ref={cloudGroupRef}>
       <instancedMesh
         ref={instMeshRef}
-        args={[new TetrahedronGeometry(1), new MeshBasicMaterial({ color: props.baseColor }), props.cloudSize]}
+        args={[new TetrahedronGeometry(1), new MeshBasicMaterial({ color: props.baseColor }), cst.CLOUD_POINT_SIZE]}
         visible={false}
       />
       {
@@ -256,7 +262,7 @@ function BoidCloud(props: BoidCloudProps): JSX.Element {
         &&
         <lineSegments
           visible={false}>
-          <wireframeGeometry args={[new BoxGeometry(props.bounds.x * 2, props.bounds.y * 2, props.bounds.z * 2)]} />
+          <wireframeGeometry args={[new BoxGeometry(bounds.x * 2, bounds.y * 2, bounds.z * 2)]} />
           <lineBasicMaterial
             color={props.baseColor}
             depthTest={false}

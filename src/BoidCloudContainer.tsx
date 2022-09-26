@@ -5,11 +5,11 @@ import { OrbitControls } from '@react-three/drei';
 import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 import * as cst from './constants';
-
-import ToneManager from './ToneManager';
-import BoidCloud from './BoidCloud';
-import { initMessageToWorker, readyMessageToWorker, resetMessageToWorker, resultMessageFromWorker } from './workerInterface';
 import { useFermataStore } from './fermataState';
+import ToneManager from './ToneManager';
+import { initMessageToWorker, readyMessageToWorker, resetMessageToWorker, resultMessageFromWorker } from './workerInterface';
+
+import BoidCloud from './BoidCloud';
 
 /**
  * The properties required by a {@see BoidCloudContainer}.
@@ -44,11 +44,9 @@ function BoidCloudContainer(props: BoidCloudContainerProps): JSX.Element {
         position={[Math.cos(cloudRad) * cloudDistributionRadius, cst.OVERALL_Y_RANGE, Math.sin(cloudRad) * cloudDistributionRadius]}
       >
         <BoidCloud
-          cloudSize={cst.CLOUD_POINT_SIZE}
-          bounds={new Vector3(cst.CLOUD_XZ_RANGE, cst.CLOUD_Y_RANGE / 2, cst.CLOUD_XZ_RANGE)}
-          periodSeconds={cst.CLOUD_PERIOD_SECONDS[cloudIndex]}
+          cloudIndex={cloudIndex}
           baseColor={cloudBaseColor}
-          audioChain={props.toneManager.cloudChains[cloudIndex]}
+          toneManager={props.toneManager}
           />
       </group>
     });
@@ -174,7 +172,7 @@ useFrame((state) => {
         groupObject.position.set(newPosition[0], newPosition[1], newPosition[2]);
       }
 
-      if (props.toneManager !== null && props.toneManager.cloudChains.length > 0 && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
+      if (props.toneManager !== null && state.clock.elapsedTime > lastMusicTime.current + MUSIC_SECONDS) {
         // As individual clouds get closer to the center (i.e. have a shorter position vector length), increase the volume
         const farVolumeDb = -55;
         const closeVolumeDb = -20;
@@ -184,8 +182,9 @@ useFrame((state) => {
         for(let boidGroupIdx = 0; boidGroupIdx < cst.CLOUD_COUNT; boidGroupIdx++) {
           const groupObject = cloudGroups.current[boidGroupIdx];
           const cloudVolumeRadiusSq = MathUtils.clamp(groupObject.position.lengthSq(), closeVolumeRadiusSq, farVolumeRadiusSq);
-          
-          props.toneManager.cloudChains[boidGroupIdx].volume.volume.value = MathUtils.mapLinear(cloudVolumeRadiusSq, farVolumeRadiusSq, closeVolumeRadiusSq, farVolumeDb, closeVolumeDb);
+          const cloudVolume = MathUtils.mapLinear(cloudVolumeRadiusSq, farVolumeRadiusSq, closeVolumeRadiusSq, farVolumeDb, closeVolumeDb);
+
+          props.toneManager.setCloudVolume(boidGroupIdx, cloudVolume);
         }
 
         // Indicate when the music was updated
