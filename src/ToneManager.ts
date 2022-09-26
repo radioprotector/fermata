@@ -156,8 +156,7 @@ class ToneManager {
   public async ensureAudioInitialized(): Promise<void> {
     // Ensure the global volume node exists
     if (this._globalVolumeNode == null) {
-      this._globalVolumeNode = new Volume();
-      this._globalVolumeNode.volume.value = this.globalVolume;
+      this._globalVolumeNode = new Volume(this.globalVolume);
       this._globalVolumeNode.connect(toneGetDestination());
     }
 
