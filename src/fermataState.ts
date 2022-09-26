@@ -13,7 +13,7 @@ const initialRotationIndex = 1;
  */
 export const AUDIO_VOLUMES = [-30, -20, -10, -5, 0];
 
-const initialAudioVolumeIndex = 3;
+const initialAudioVolumeIndex = 2;
 
 interface FermataState {
   /**

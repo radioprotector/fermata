@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 // Import globals with specific aliases to avoid https://github.com/Tonejs/Tone.js/issues/1102
-import { start as toneStart } from 'tone';
+import { Context, getContext as toneGetContext, setContext as toneSetContext } from 'tone';
 
 import { useFermataStore, AUDIO_VOLUMES } from './fermataState';
 import ToneManager from './ToneManager';
@@ -21,10 +21,25 @@ function InterfaceControls(props: InterfaceControlsProps): JSX.Element {
   const audioVolumeIndex = useFermataStore((state) => state.audioVolumeIndex);
   const setAudioVolume = useFermataStore((state) =>  state.setAudioVolume);
 
-  const toggleAudioClickHandler = async () => {
+  // For whatever reason, Safari autoplay really doesn't like async click handlers for starting audio context,
+  // so we're going to make sure this is synchronous even if the underlying methods aren't
+  const toggleAudioClickHandler = () => {
     if (!isAudioPlaying) {
+      // Ensure we have a Tone context initialized and ready to play.
       // Unfortunately, this *has* to be in this event handler to prevent auto-play blocking
-      await toneStart();
+      // Get the audio context currently in use by Tone
+      let toneContext = toneGetContext();
+
+      // See if we need to create a new context with a latency hit
+      if (toneContext === null || toneContext.latencyHint !== 'playback') {
+        toneContext = new Context({ latencyHint: 'playback'});
+        toneSetContext(toneContext);
+      }
+
+      // Unfortunately, this *has* to be in this event handler to prevent auto-play blocking
+      if (toneContext.state !== 'running') {
+        toneContext.resume();
+      }
 
       props.toneManager.startPlayback();
       setAudioPlaying(true);

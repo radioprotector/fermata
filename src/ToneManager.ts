@@ -1,7 +1,7 @@
-import { Frequency, Synth, PolySynth, SynthOptions, Volume, CrossFade, Tremolo, Loop, Context } from 'tone';
+import { Frequency, Synth, PolySynth, SynthOptions, Volume, CrossFade, Tremolo, Loop } from 'tone';
 
 // Import globals with specific aliases to avoid https://github.com/Tonejs/Tone.js/issues/1102
-import { loaded as toneLoaded, getDestination as toneGetDestination, getTransport as toneGetTransport, setContext as toneSetContext } from 'tone';
+import { loaded as toneLoaded, getDestination as toneGetDestination, getTransport as toneGetTransport } from 'tone';
 import { RecursivePartial } from 'tone/build/esm/core/util/Interface';
 import { Instrument, InstrumentOptions } from 'tone/build/esm/instrument/Instrument';
 import { Frequency as FrequencyUnit } from 'tone/build/esm/core/type/Units';
@@ -38,7 +38,7 @@ interface CloudAudioChain {
 
 class ToneManager {
 
-  private _audioInitialized: boolean = false;
+  private _audioPatternsInitialized: boolean = false;
 
   /**
    * The collection of cloud-specific instrument chains.
@@ -153,26 +153,29 @@ class ToneManager {
     };
   }
   
-  public async registerPatterns(): Promise<void> {
+  public async ensureAudioInitialized(): Promise<void> {
+    // Ensure the global volume node exists
+    if (this._globalVolumeNode == null) {
+      this._globalVolumeNode = new Volume();
+      this._globalVolumeNode.volume.value = this.globalVolume;
+      this._globalVolumeNode.connect(toneGetDestination());
+    }
+
+    // Ensure that all cloud chains have been created
+    if (this._cloudChains.length === 0) {
+      for(let cloudIndex = 0; cloudIndex < cst.CLOUD_COUNT; cloudIndex++) {
+        this._cloudChains.push(this.buildCloudAudioChain(cloudIndex));
+      }
+    }
+
     return toneLoaded()
       .then(() => {
-        if (this._audioInitialized) {
+        if (this._audioPatternsInitialized) {
           return;
         }
 
-        // Create an audio context
-        toneSetContext(new Context({ latencyHint : 'playback', lookAhead: 0 }));
-
-        // Create a node to receive all of the instruments
-        this._globalVolumeNode = new Volume();
-        this._globalVolumeNode.toDestination();
-    
-        // Now that we have an audio context, initialize the instrument chains for each cloud
-        for(let cloudIndex = 0; cloudIndex < cst.CLOUD_COUNT; cloudIndex++) {
-          const cloudChain = this.buildCloudAudioChain(cloudIndex);
-          this._cloudChains.push(cloudChain);
-
-          // Create a loop for the chain
+        // Create a loop for each audio chain
+        for(const cloudChain of this._cloudChains) {
           new Loop(() => {
             cloudChain.baseInstrument.triggerAttackRelease(cloudChain.baseNote, cloudChain.periodSeconds * 1.05);
             cloudChain.chordInstrument.triggerAttackRelease(cloudChain.chordFrequencies, cloudChain.periodSeconds * 1.05);
@@ -180,21 +183,22 @@ class ToneManager {
         }
 
         // Indicate that the audio has been initialized
-        this._audioInitialized = true;
+        this._audioPatternsInitialized = true;
     });
   }
 
-  public async startPlayback(): Promise<void> {
-    // Ensure patterns are good to go
-    await this.registerPatterns();
+  public startPlayback(): void {
+    // Ensure audio has been initialized
+    this.ensureAudioInitialized()
+      .then(() => {
+        toneGetDestination().mute = false;
+
+        const toneTransport = toneGetTransport();
+        toneTransport.bpm.value = 100;
+        toneTransport.start();
     
-    toneGetDestination().mute = false;
-
-    const toneTransport = toneGetTransport();
-    toneTransport.bpm.value = 100;
-    toneTransport.start();
-
-    this._isPlaying = true;
+        this._isPlaying = true;
+      });
   }
  
   public stopPlayback(): void {
