@@ -1,6 +1,6 @@
 {
   "short_name": "fermata",
-  "name": "fermata",
+  "name": "fermata - a browser-based flocking simulator",
   "icons": [
     {
       "src": "favicon.ico",
